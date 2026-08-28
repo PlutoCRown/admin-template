@@ -1,0 +1,12 @@
+.ant-pro-page-container .ant-page-header {
+  padding-inline: 16px;
+  padding-block: 8px 0;
+}
+
+.ant-pro-page-container .ant-page-header-heading {
+  margin-block: 0;
+}
+
+.ant-pro-page-container .ant-card-body {
+  padding: 16px;
+}

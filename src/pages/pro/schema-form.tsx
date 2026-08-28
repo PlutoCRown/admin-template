@@ -1,25 +1,37 @@
-import { BetaSchemaForm, PageContainer, type ProFormColumnsType } from "@ant-design/pro-components";
+import { BetaSchemaForm, type ProFormColumnsType } from "@ant-design/pro-components";
 import { App, Card } from "antd";
-import { getErrorMessage } from "#api/client";
 import { createStaffApi } from "#api/staff";
 import type { StaffPayload } from "#api/types";
+import { chFormItemProps } from "#components/form";
+import { PageContainer } from "#components/page-container";
+
+const labelWidth = 4;
 
 const columns: ProFormColumnsType<StaffPayload>[] = [
   {
     title: "姓名",
     dataIndex: "name",
-    formItemProps: { rules: [{ required: true, message: "请输入姓名" }] },
+    formItemProps: {
+      ...chFormItemProps({ labelWidth, width: 8 }),
+      rules: [{ required: true, message: "请输入姓名" }],
+    },
   },
   {
     title: "邮箱",
     dataIndex: "email",
     valueType: "text",
-    formItemProps: { rules: [{ required: true, type: "email", message: "请输入邮箱" }] },
+    formItemProps: {
+      ...chFormItemProps({ labelWidth, width: 20 }),
+      rules: [{ required: true, type: "email", message: "请输入邮箱" }],
+    },
   },
   {
     title: "手机号",
     dataIndex: "phone",
-    formItemProps: { rules: [{ required: true }] },
+    formItemProps: {
+      ...chFormItemProps({ labelWidth, width: 13 }),
+      rules: [{ required: true }],
+    },
   },
   {
     title: "部门",
@@ -31,7 +43,10 @@ const columns: ProFormColumnsType<StaffPayload>[] = [
       设计部: "设计部",
       内容运营: "内容运营",
     },
-    formItemProps: { rules: [{ required: true }] },
+    formItemProps: {
+      ...chFormItemProps({ labelWidth, width: 12 }),
+      rules: [{ required: true }],
+    },
   },
   {
     title: "角色",
@@ -42,7 +57,10 @@ const columns: ProFormColumnsType<StaffPayload>[] = [
       editor: "编辑",
       viewer: "访客",
     },
-    formItemProps: { rules: [{ required: true }] },
+    formItemProps: {
+      ...chFormItemProps({ labelWidth, width: 16 }),
+      rules: [{ required: true }],
+    },
   },
   {
     title: "状态",
@@ -53,6 +71,7 @@ const columns: ProFormColumnsType<StaffPayload>[] = [
       active: "启用",
       disabled: "停用",
     },
+    formItemProps: chFormItemProps({ labelWidth, width: 8 }),
   },
 ];
 
@@ -64,14 +83,18 @@ export function SchemaFormPage() {
       <Card>
         <BetaSchemaForm<StaffPayload>
           layoutType="Form"
+          layout="horizontal"
+          grid={false}
+          labelCol={{ flex: "0 0 auto" }}
+          wrapperCol={{ flex: "none" }}
+          className="ch-form"
           columns={columns}
           onFinish={async (values) => {
             try {
               await createStaffApi(values);
               message.success("已通过 Schema 创建员工");
               return true;
-            } catch (error) {
-              message.error(getErrorMessage(error));
+            } catch {
               return false;
             }
           }}

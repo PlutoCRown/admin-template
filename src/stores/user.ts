@@ -17,21 +17,16 @@ export const useUserStore = create<UserState>()(
       token: null,
       user: null,
       setAuth: (token, user) => {
-        set((state) => {
-          state.token = token;
-          state.user = user;
+        set({
+          token,
+          user,
         });
       },
       setUser: (user) => {
-        set((state) => {
-          state.user = user;
-        });
+        set({ user });
       },
       clearAuth: () => {
-        set((state) => {
-          state.token = null;
-          state.user = null;
-        });
+        set({ token: null, user: null });
       },
     })),
     {

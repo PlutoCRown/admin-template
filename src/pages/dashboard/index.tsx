@@ -1,5 +1,6 @@
-import { PageContainer, ProCard } from "@ant-design/pro-components";
+import { ProCard } from "@ant-design/pro-components";
 import { Descriptions, Space, Tag, Typography } from "antd";
+import { PageContainer } from "#components/page-container";
 import { useUserStore } from "#stores/user";
 
 const stack = [

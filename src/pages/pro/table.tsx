@@ -1,18 +1,18 @@
-import { useRef } from "react";
-import { PlusOutlined } from "@ant-design/icons";
-import {
-  ModalForm,
-  PageContainer,
-  ProFormSelect,
-  ProFormText,
-  ProTable,
-  type ActionType,
-  type ProColumns,
-} from "@ant-design/pro-components";
+import { useRef, type RefObject } from "react";
+import { CheckCircleOutlined, PlusOutlined, StopOutlined } from "@ant-design/icons";
+import { ModalForm } from "@ant-design/pro-components";
 import { App, Button, Popconfirm, Space } from "antd";
-import { getErrorMessage } from "#api/client";
 import { createStaffApi, deleteStaffApi, getStaffListApi, updateStaffApi } from "#api/staff";
 import type { Staff, StaffPayload } from "#api/types";
+import { FormSelect, FormText } from "#components/form";
+import { PageContainer } from "#components/page-container";
+import {
+  ProTable,
+  tagSelectRenderer,
+  type ProColumns,
+  type ProTableAction,
+} from "#components/pro-table";
+import { runOptimistic } from "#hooks/use-optimistic";
 
 const departmentOptions = [
   { label: "研发中心", value: "研发中心" },
@@ -28,15 +28,79 @@ const roleEnum = {
 };
 
 const statusEnum = {
-  active: { text: "启用", status: "Success" },
-  disabled: { text: "停用", status: "Default" },
+  active: { text: "启用", status: "Success", icon: <CheckCircleOutlined /> },
+  disabled: { text: "停用", status: "Default", icon: <StopOutlined /> },
 };
 
-function CreateStaffButton({ onCreated }: { onCreated: () => void }) {
+function handleStatusChange(status: Staff["status"], record: Staff) {
+  return updateStaffApi(record.id, {
+    name: record.name,
+    email: record.email,
+    phone: record.phone,
+    department: record.department,
+    role: record.role,
+    status,
+  });
+}
+
+const statusRenderer = tagSelectRenderer<Staff, Staff["status"]>({
+  onChange: handleStatusChange,
+});
+
+function StaffFormFields() {
+  return (
+    <>
+      <FormText name="name" label="姓名" labelWidth={4} width={12} rules={[{ required: true }]} />
+      <FormText
+        name="email"
+        label="邮箱"
+        labelWidth={4}
+        width={20}
+        rules={[{ required: true, type: "email" }]}
+      />
+      <FormText
+        name="phone"
+        label="手机号"
+        labelWidth={4}
+        width={13}
+        rules={[{ required: true }]}
+      />
+      <FormSelect
+        name="department"
+        label="部门"
+        labelWidth={4}
+        width={12}
+        options={departmentOptions}
+        rules={[{ required: true }]}
+      />
+      <FormSelect
+        name="role"
+        label="角色"
+        labelWidth={4}
+        width={10}
+        valueEnum={{ admin: "管理员", editor: "编辑", viewer: "访客" }}
+        rules={[{ required: true }]}
+      />
+      <FormSelect
+        name="status"
+        label="状态"
+        labelWidth={4}
+        width={10}
+        valueEnum={{ active: "启用", disabled: "停用" }}
+        rules={[{ required: true }]}
+      />
+    </>
+  );
+}
+
+function CreateStaffButton({ actionRef }: { actionRef: RefObject<ProTableAction<Staff> | null> }) {
   const { message } = App.useApp();
   return (
     <ModalForm<StaffPayload>
       title="新建员工"
+      layout="horizontal"
+      grid={false}
+      className="ch-form"
       trigger={
         <Button type="primary" icon={<PlusOutlined />}>
           新建
@@ -45,15 +109,27 @@ function CreateStaffButton({ onCreated }: { onCreated: () => void }) {
       initialValues={{ role: "viewer", status: "active" }}
       modalProps={{ destroyOnHidden: true }}
       onFinish={async (values) => {
-        try {
-          await createStaffApi(values);
+        const action = actionRef.current;
+        const snapshot = action?.getDataSource() ?? [];
+        const tempId = `tmp_${Date.now()}`;
+        const temp: Staff = {
+          ...values,
+          id: tempId,
+          createdAt: new Date().toISOString(),
+        };
+        const ok = await runOptimistic({
+          snapshot,
+          next: [temp, ...snapshot],
+          commit: (rows) => action?.setDataSource(rows),
+          request: async () => {
+            const created = await createStaffApi(values);
+            action?.setDataSource([created, ...snapshot]);
+          },
+        });
+        if (ok) {
           message.success("已创建");
-          onCreated();
-          return true;
-        } catch (error) {
-          message.error(getErrorMessage(error));
-          return false;
         }
+        return ok;
       }}
     >
       <StaffFormFields />
@@ -61,36 +137,8 @@ function CreateStaffButton({ onCreated }: { onCreated: () => void }) {
   );
 }
 
-function StaffFormFields() {
-  return (
-    <>
-      <ProFormText name="name" label="姓名" rules={[{ required: true }]} />
-      <ProFormText name="email" label="邮箱" rules={[{ required: true, type: "email" }]} />
-      <ProFormText name="phone" label="手机号" rules={[{ required: true }]} />
-      <ProFormSelect
-        name="department"
-        label="部门"
-        options={departmentOptions}
-        rules={[{ required: true }]}
-      />
-      <ProFormSelect
-        name="role"
-        label="角色"
-        valueEnum={{ admin: "管理员", editor: "编辑", viewer: "访客" }}
-        rules={[{ required: true }]}
-      />
-      <ProFormSelect
-        name="status"
-        label="状态"
-        valueEnum={{ active: "启用", disabled: "停用" }}
-        rules={[{ required: true }]}
-      />
-    </>
-  );
-}
-
 export function ProTablePage() {
-  const actionRef = useRef<ActionType>(null);
+  const actionRef = useRef<ProTableAction<Staff>>(null);
   const { message } = App.useApp();
 
   const columns: ProColumns<Staff>[] = [
@@ -104,7 +152,12 @@ export function ProTablePage() {
       fieldProps: { options: departmentOptions },
     },
     { title: "角色", dataIndex: "role", valueEnum: roleEnum },
-    { title: "状态", dataIndex: "status", valueEnum: statusEnum },
+    {
+      title: "状态",
+      dataIndex: "status",
+      valueEnum: statusEnum,
+      renderer: statusRenderer,
+    },
     { title: "创建时间", dataIndex: "createdAt", valueType: "dateTime", search: false },
     {
       title: "操作",
@@ -113,19 +166,32 @@ export function ProTablePage() {
         <Space>
           <ModalForm<StaffPayload>
             title="编辑员工"
+            layout="horizontal"
+            grid={false}
+            className="ch-form"
             trigger={<a>编辑</a>}
             initialValues={record}
             modalProps={{ destroyOnHidden: true }}
             onFinish={async (values) => {
-              try {
-                await updateStaffApi(record.id, values);
+              const action = actionRef.current;
+              const snapshot = action?.getDataSource() ?? [];
+              const ok = await runOptimistic({
+                snapshot,
+                next: snapshot.map((item) =>
+                  item.id === record.id ? { ...item, ...values } : item,
+                ),
+                commit: (rows) => action?.setDataSource(rows),
+                request: async () => {
+                  const updated = await updateStaffApi(record.id, values);
+                  action?.setDataSource(
+                    snapshot.map((item) => (item.id === record.id ? updated : item)),
+                  );
+                },
+              });
+              if (ok) {
                 message.success("已更新");
-                void actionRef.current?.reload();
-                return true;
-              } catch (error) {
-                message.error(getErrorMessage(error));
-                return false;
               }
+              return ok;
             }}
           >
             <StaffFormFields />
@@ -133,12 +199,18 @@ export function ProTablePage() {
           <Popconfirm
             title="确认删除？"
             onConfirm={async () => {
-              try {
-                await deleteStaffApi(record.id);
+              const action = actionRef.current;
+              const snapshot = action?.getDataSource() ?? [];
+              const ok = await runOptimistic({
+                snapshot,
+                next: snapshot.filter((item) => item.id !== record.id),
+                commit: (rows) => action?.setDataSource(rows),
+                request: async () => {
+                  await deleteStaffApi(record.id);
+                },
+              });
+              if (ok) {
                 message.success("已删除");
-                void actionRef.current?.reload();
-              } catch (error) {
-                message.error(getErrorMessage(error));
               }
             }}
           >
@@ -157,9 +229,7 @@ export function ProTablePage() {
         columns={columns}
         search={{ labelWidth: "auto" }}
         headerTitle="员工列表"
-        toolBarRender={() => [
-          <CreateStaffButton key="create" onCreated={() => actionRef.current?.reload()} />,
-        ]}
+        toolBarRender={() => [<CreateStaffButton key="create" actionRef={actionRef} />]}
         request={async (params) => {
           const result = await getStaffListApi({
             page: params.current,

@@ -1,0 +1,49 @@
+.admin-pro-table
+  :where(span):has(> span > .ant-typography > .ant-typography-actions > .ant-typography-copy) {
+  gap: 6px;
+}
+
+.admin-pro-table
+  :where(span):has(> .ant-typography > .ant-typography-actions > .ant-typography-copy) {
+  order: -1;
+  transform: translateY(1px);
+}
+
+.admin-pro-table .ant-typography-copy {
+  margin-inline-start: 0;
+}
+
+.admin-pro-table-tag-select-trigger {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.admin-pro-table-tag-select-trigger:disabled {
+  cursor: default;
+}
+
+.admin-pro-table-tag-select-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline-end: 0;
+}
+
+.admin-pro-table-tag-select-trigger:not(:disabled):hover .admin-pro-table-tag-select-value {
+  filter: brightness(0.96);
+}
+
+.admin-pro-table-tag-select-trigger.is-loading .admin-pro-table-tag-select-value {
+  opacity: 0.72;
+}
+
+.admin-pro-table-tag-select-loading {
+  font-size: 10px;
+}
+
+.admin-pro-table-tag-select-menu-value {
+  margin-inline-end: 0;
+}

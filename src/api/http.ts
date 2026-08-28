@@ -13,6 +13,8 @@ export interface HttpRequestConfig<D = unknown> {
   signal?: AbortSignal;
   responseType?: "json" | "text" | "blob";
   withCredentials?: boolean;
+  /** 跳过全局 Notification 报错（例如登录页自己处理） */
+  skipErrorNotify?: boolean;
 }
 
 export interface HttpResponse<T = unknown> {
@@ -341,21 +343,5 @@ export function createHttp(instanceConfig: CreateHttpOptions = {}): HttpInstance
     post: (url, data, config) => request({ ...config, url, data, method: "POST" }),
     put: (url, data, config) => request({ ...config, url, data, method: "PUT" }),
     patch: (url, data, config) => request({ ...config, url, data, method: "PATCH" }),
-  };
-}
-
-export function buildMockResponse<T>(
-  config: HttpRequestConfig,
-  body: T,
-  status = 200,
-  statusText = "OK",
-): HttpResponse<T> {
-  const headers = new Headers({ "Content-Type": "application/json" });
-  return {
-    data: body,
-    status,
-    statusText,
-    headers,
-    config,
   };
 }

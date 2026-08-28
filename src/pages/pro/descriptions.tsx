@@ -1,8 +1,9 @@
-import { PageContainer, ProDescriptions } from "@ant-design/pro-components";
+import { ProDescriptions } from "@ant-design/pro-components";
 import { Card } from "antd";
 import { useSearchParams } from "react-router";
 import { getArticleApi, getArticleListApi } from "#api/articles";
 import type { Article } from "#api/types";
+import { PageContainer } from "#components/page-container";
 
 export function ProDescriptionsPage() {
   const [searchParams] = useSearchParams();

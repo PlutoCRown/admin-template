@@ -1,10 +1,10 @@
 import { LogoutOutlined, UserOutlined } from "@ant-design/icons";
 import { ProLayout, type MenuDataItem } from "@ant-design/pro-components";
-import { App, Dropdown } from "antd";
+import { Dropdown } from "antd";
 import type { ReactNode } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import { logoutApi } from "#api/auth";
-import { getErrorMessage } from "#api/client";
+import { pageContainerToken } from "#components/page-container";
 import { menuRoute } from "#router/menu";
 import { useUserStore } from "#stores/user";
 
@@ -38,15 +38,14 @@ function UserAvatar({ dom, onLogout }: { dom: ReactNode; onLogout: () => void })
 export function BasicLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { message } = App.useApp();
   const user = useUserStore((state) => state.user);
   const clearAuth = useUserStore((state) => state.clearAuth);
 
   const handleLogout = async () => {
     try {
       await logoutApi();
-    } catch (error) {
-      message.warning(getErrorMessage(error));
+    } catch {
+      // 错误已由接口拦截器 Notification 提示
     }
     clearAuth();
     void navigate("/login", { replace: true });
@@ -63,6 +62,9 @@ export function BasicLayout() {
       menu={{ defaultOpenAll: true, autoClose: false }}
       menuItemRender={renderMenuItem}
       onMenuHeaderClick={() => navigate("/dashboard")}
+      token={{
+        pageContainer: pageContainerToken,
+      }}
       avatarProps={{
         src: user?.avatar,
         title: user?.nickname,

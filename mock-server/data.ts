@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import type { Article, MediaFile, Product, Staff, UserProfile } from "#api/types";
+import type { Article, MediaFile, Product, Staff, UserProfile } from "../src/api/types";
 
 export const DEMO_ACCOUNTS = [
   { username: "admin", password: "admin123", label: "管理员" },
@@ -53,8 +53,6 @@ export const passwords: Record<string, string> = {
   admin: "admin123",
   editor: "editor123",
 };
-
-export const tokens = new Map<string, string>();
 
 export const staff: Staff[] = Array.from({ length: 28 }, (_, index) => {
   const id = index + 1;
@@ -120,47 +118,19 @@ export const articles: Article[] = [
     views: 540,
     status: "draft",
     publishedAt: dayjs().subtract(12, "day").toISOString(),
-    content: "排序态不要复用源节点，单独做 DragOverlay 会更不容易抖。",
+    content: "缩略图右上角圆形关闭，拖动时保持原样式。",
   },
 ];
 
 export const products: Product[] = [];
 
-export function paginate<T>(
-  list: T[],
-  page = 1,
-  pageSize = 10,
-): { list: T[]; total: number; page: number; pageSize: number } {
-  const start = (page - 1) * pageSize;
+export async function fileToMedia(file: File, uid: string): Promise<MediaFile> {
+  const bytes = Buffer.from(await file.arrayBuffer());
   return {
-    list: list.slice(start, start + pageSize),
-    total: list.length,
-    page,
-    pageSize,
+    uid,
+    name: file.name,
+    url: `data:${file.type || "application/octet-stream"};base64,${bytes.toString("base64")}`,
+    size: file.size,
+    type: file.type,
   };
-}
-
-export function fileToMedia(file: File, uid: string): Promise<MediaFile> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.addEventListener(
-      "load",
-      () => {
-        if (typeof reader.result !== "string") {
-          reject(new Error("文件读取失败"));
-          return;
-        }
-        resolve({
-          uid,
-          name: file.name,
-          url: reader.result,
-          size: file.size,
-          type: file.type,
-        });
-      },
-      { once: true },
-    );
-    reader.addEventListener("error", () => reject(new Error("文件读取失败")), { once: true });
-    reader.readAsDataURL(file);
-  });
 }

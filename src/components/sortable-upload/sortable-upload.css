@@ -4,6 +4,15 @@
   gap: 12px;
 }
 
+.sortable-upload-card {
+  position: relative;
+  z-index: 0;
+}
+
+.sortable-upload-card.is-dragging {
+  z-index: 10;
+}
+
 .sortable-upload-item,
 .sortable-upload-add {
   width: 120px;
@@ -17,10 +26,15 @@
 .sortable-upload-item {
   border: 1px solid #f0f0f0;
   cursor: grab;
+  transition: box-shadow 0.2s ease;
 }
 
-.is-dragging .sortable-upload-item {
-  opacity: 0.35;
+.sortable-upload-card.is-dragging .sortable-upload-item {
+  box-shadow: 0 12px 28px rgb(0 0 0 / 22%);
+}
+
+.sortable-upload-item:active {
+  cursor: grabbing;
 }
 
 .sortable-upload-item img {
@@ -30,20 +44,27 @@
   display: block;
 }
 
-.sortable-upload-actions {
+.sortable-upload-remove {
   position: absolute;
-  inset: 0;
-  display: flex;
+  top: 6px;
+  right: 6px;
+  z-index: 1;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  background: rgb(0 0 0 / 45%);
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  background: rgb(0 0 0 / 55%);
+  color: #fff;
+  font-size: 10px;
+  cursor: pointer;
 }
 
-.sortable-upload-item:hover .sortable-upload-actions {
-  opacity: 1;
+.sortable-upload-remove:hover {
+  background: rgb(0 0 0 / 75%);
 }
 
 .sortable-upload-add {
@@ -54,33 +75,4 @@
   justify-content: center;
   color: #8c8c8c;
   cursor: pointer;
-}
-
-.sortable-upload-overlay {
-  width: 180px;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #fff;
-  box-shadow: 0 12px 32px rgb(0 0 0 / 18%);
-}
-
-.sortable-upload-overlay img {
-  width: 100%;
-  height: 120px;
-  object-fit: cover;
-  display: block;
-}
-
-.sortable-upload-overlay-meta {
-  padding: 8px 10px 10px;
-}
-
-.sortable-upload-overlay-meta strong {
-  display: block;
-  font-size: 13px;
-}
-
-.sortable-upload-overlay-meta span {
-  color: #8c8c8c;
-  font-size: 12px;
 }

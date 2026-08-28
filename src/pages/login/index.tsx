@@ -3,9 +3,8 @@ import { LoginForm, ProFormText } from "@ant-design/pro-components";
 import { App, Spin, Typography } from "antd";
 import { Navigate, useNavigate } from "react-router";
 import { loginApi } from "#api/auth";
-import { getErrorMessage } from "#api/client";
 import { useStoreHydration } from "#hooks/use-store-hydration";
-import { DEMO_ACCOUNTS } from "#mocks/data";
+import { DEMO_ACCOUNTS } from "#constants/demo";
 import { useUserStore } from "#stores/user";
 
 export function LoginPage() {
@@ -50,8 +49,9 @@ export function LoginPage() {
             setAuth(result.token, result.user);
             message.success(`欢迎回来，${result.user.nickname}`);
             void navigate("/dashboard", { replace: true });
-          } catch (error) {
-            message.error(getErrorMessage(error));
+            return true;
+          } catch {
+            return false;
           }
         }}
       >

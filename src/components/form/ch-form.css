@@ -1,0 +1,64 @@
+.ch-form,
+.ch-form-item {
+  --form-ch: 1em;
+}
+
+.ch-form {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 1.5em;
+  align-items: flex-start;
+}
+
+.ch-form-item {
+  margin-inline-end: 0;
+}
+
+.ch-form-item-inline {
+  display: inline-flex !important;
+  width: auto;
+  max-width: 100%;
+  vertical-align: top;
+}
+
+.ch-form-item-block {
+  display: flex !important;
+  flex: 1 1 100%;
+  width: 100%;
+}
+
+.ch-form-item .ant-form-item-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  width: auto;
+}
+
+.ch-form-item .ant-form-item-label {
+  flex: 0 0 var(--ch-label-width);
+  width: var(--ch-label-width);
+  max-width: var(--ch-label-width);
+  padding: 0;
+}
+
+.ch-form-item .ant-form-item-label > label {
+  height: auto;
+  white-space: nowrap;
+}
+
+.ch-form-item-inline .ant-form-item-control {
+  flex: 0 0 var(--ch-input-width);
+  width: var(--ch-input-width);
+  max-width: var(--ch-input-width);
+}
+
+.ch-form-item-block .ant-form-item-control {
+  flex: 1 1 auto;
+  width: auto;
+  max-width: none;
+}
+
+.ch-form .ant-pro-form-submitter {
+  flex: 1 1 100%;
+  margin-block-start: 8px;
+}

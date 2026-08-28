@@ -1,20 +1,23 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { DeleteOutlined, EyeOutlined, HolderOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+  type PointerEvent,
+} from "react";
+import { CloseOutlined, PlusOutlined } from "@ant-design/icons";
 import {
   DndContext,
-  DragOverlay,
   PointerSensor,
   closestCenter,
-  defaultDropAnimationSideEffects,
   useSensor,
   useSensors,
   type DragEndEvent,
-  type DragStartEvent,
-  type DropAnimation,
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, rectSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { App, Button, Image, Upload } from "antd";
+import { App, Image, Upload, type UploadProps } from "antd";
 import { getErrorMessage } from "#api/client";
 import { uploadFileApi } from "#api/products";
 import type { MediaFile } from "#api/types";
@@ -26,79 +29,81 @@ interface SortableUploadProps {
   max?: number;
 }
 
-const dropAnimation: DropAnimation = {
-  sideEffects: defaultDropAnimationSideEffects({
-    styles: {
-      active: { opacity: "0.35" },
-    },
-  }),
-};
-
-function OverlayCard({ file }: { file: MediaFile }) {
-  return (
-    <div className="sortable-upload-overlay">
-      <img src={file.url} alt={file.name} />
-      <div className="sortable-upload-overlay-meta">
-        <strong>{file.name}</strong>
-        <span>
-          <HolderOutlined /> 自定义覆盖层 · {(file.size / 1024).toFixed(1)} KB
-        </span>
-      </div>
-    </div>
-  );
+interface SortableFileCardProps {
+  file: MediaFile;
+  onPreview: (uid: string) => void;
+  onRemove: (uid: string) => void;
 }
 
-function SortableFileCard({
-  file,
-  onPreview,
-  onRemove,
-}: {
-  file: MediaFile;
-  onPreview: () => void;
-  onRemove: () => void;
-}) {
+const DROP_TRANSITION_DURATION = 250;
+const DROP_TRANSITION_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
+
+function handleRemovePointerDown(event: PointerEvent<HTMLButtonElement>) {
+  event.stopPropagation();
+}
+
+function getSortableTransition(isDragging: boolean, transition?: string) {
+  if (isDragging) {
+    return undefined;
+  }
+
+  const transformTransition =
+    transition ?? `transform ${DROP_TRANSITION_DURATION}ms ${DROP_TRANSITION_EASING}`;
+  return `${transformTransition}, z-index 0s ${DROP_TRANSITION_DURATION}ms`;
+}
+
+function SortableFileCard({ file, onPreview, onRemove }: SortableFileCardProps) {
+  const draggedRef = useRef(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: file.uid,
+    transition: {
+      duration: DROP_TRANSITION_DURATION,
+      easing: DROP_TRANSITION_EASING,
+    },
   });
+
+  useEffect(() => {
+    if (isDragging) {
+      draggedRef.current = true;
+    }
+  }, [isDragging]);
 
   const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: getSortableTransition(isDragging, transition),
+  };
+
+  const handlePreview = () => {
+    if (draggedRef.current) {
+      draggedRef.current = false;
+      return;
+    }
+    onPreview(file.uid);
+  };
+
+  const handleRemove = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    onRemove(file.uid);
   };
 
   return (
     <div
       ref={setNodeRef}
-      className={isDragging ? "is-dragging" : undefined}
+      className={`sortable-upload-card${isDragging ? " is-dragging" : ""}`}
       style={style}
       {...attributes}
     >
-      <div className="sortable-upload-item" {...listeners}>
+      <div className="sortable-upload-item" {...listeners} onClick={handlePreview}>
         <img src={file.url} alt={file.name} />
-        <div className="sortable-upload-actions">
-          <Button
-            size="small"
-            type="text"
-            style={{ color: "#fff" }}
-            icon={<EyeOutlined />}
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={(event) => {
-              event.stopPropagation();
-              onPreview();
-            }}
-          />
-          <Button
-            size="small"
-            type="text"
-            style={{ color: "#fff" }}
-            icon={<DeleteOutlined />}
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={(event) => {
-              event.stopPropagation();
-              onRemove();
-            }}
-          />
-        </div>
+        <button
+          type="button"
+          className="sortable-upload-remove"
+          aria-label="删除"
+          onPointerDown={handleRemovePointerDown}
+          onClick={handleRemove}
+        >
+          <CloseOutlined />
+        </button>
       </div>
     </div>
   );
@@ -110,7 +115,6 @@ export function SortableUpload({ value = [], onChange, max = 8 }: SortableUpload
   useEffect(() => {
     valueRef.current = value;
   }, [value]);
-  const [activeId, setActiveId] = useState<string | null>(null);
   const [previewUid, setPreviewUid] = useState<string | undefined>();
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -118,16 +122,10 @@ export function SortableUpload({ value = [], onChange, max = 8 }: SortableUpload
     }),
   );
 
-  const activeFile = useMemo(() => value.find((item) => item.uid === activeId), [activeId, value]);
   const ids = value.map((item) => item.uid);
-
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(String(event.active.id));
-  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    setActiveId(null);
     if (!over || active.id === over.id) {
       return;
     }
@@ -136,42 +134,61 @@ export function SortableUpload({ value = [], onChange, max = 8 }: SortableUpload
     onChange?.(arrayMove(value, oldIndex, newIndex));
   };
 
+  const handlePreview = (uid: string) => {
+    setPreviewUid(uid);
+  };
+
+  const handleRemove = (uid: string) => {
+    onChange?.(value.filter((item) => item.uid !== uid));
+  };
+
+  const handleUpload: NonNullable<UploadProps["customRequest"]> = async (options) => {
+    const file = options.file as File;
+    try {
+      const uploaded = await uploadFileApi(file);
+      onChange?.([...valueRef.current, uploaded]);
+      options.onSuccess?.(uploaded);
+    } catch (error) {
+      options.onError?.(error as Error);
+      message.error(getErrorMessage(error));
+    }
+  };
+
+  const handlePreviewOpenChange = (open: boolean) => {
+    if (!open) {
+      setPreviewUid(undefined);
+    }
+  };
+
+  const handlePreviewChange = (current: number) => {
+    setPreviewUid(value[current]?.uid);
+  };
+
+  const renderFileCard = (file: MediaFile) => (
+    <SortableFileCard
+      key={file.uid}
+      file={file}
+      onPreview={handlePreview}
+      onRemove={handleRemove}
+    />
+  );
+
+  const fileCards = value.map(renderFileCard);
+  const previewItems = value.map((item) => item.url);
+
   return (
     <div>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onDragCancel={() => setActiveId(null)}
-      >
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={ids} strategy={rectSortingStrategy}>
           <div className="sortable-upload-grid">
-            {value.map((file) => (
-              <SortableFileCard
-                key={file.uid}
-                file={file}
-                onPreview={() => setPreviewUid(file.uid)}
-                onRemove={() => onChange?.(value.filter((item) => item.uid !== file.uid))}
-              />
-            ))}
+            {fileCards}
             {value.length < max ? (
               <Upload
                 accept="image/*"
                 showUploadList={false}
                 multiple
                 disabled={value.length >= max}
-                customRequest={async (options) => {
-                  const file = options.file as File;
-                  try {
-                    const uploaded = await uploadFileApi(file);
-                    onChange?.([...valueRef.current, uploaded]);
-                    options.onSuccess?.(uploaded);
-                  } catch (error) {
-                    options.onError?.(error as Error);
-                    message.error(getErrorMessage(error));
-                  }
-                }}
+                customRequest={handleUpload}
               >
                 <div className="sortable-upload-add">
                   <PlusOutlined />
@@ -181,24 +198,17 @@ export function SortableUpload({ value = [], onChange, max = 8 }: SortableUpload
             ) : null}
           </div>
         </SortableContext>
-        <DragOverlay dropAnimation={dropAnimation}>
-          {activeFile ? <OverlayCard file={activeFile} /> : null}
-        </DragOverlay>
       </DndContext>
       <Image.PreviewGroup
-        items={value.map((item) => item.url)}
+        items={previewItems}
         preview={{
           open: Boolean(previewUid),
           current: Math.max(
             0,
             value.findIndex((item) => item.uid === previewUid),
           ),
-          onOpenChange: (open) => {
-            if (!open) {
-              setPreviewUid(undefined);
-            }
-          },
-          onChange: (current) => setPreviewUid(value[current]?.uid),
+          onOpenChange: handlePreviewOpenChange,
+          onChange: handlePreviewChange,
         }}
       />
     </div>
