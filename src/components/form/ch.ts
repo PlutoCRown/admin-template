@@ -19,7 +19,7 @@ export function chFormItemProps(
 ): FormItemProps {
   const isBlock = options.block || options.width == null;
   const chStyle = {
-    "--ch-label-width": chVar(options.labelWidth, "max-content"),
+    "--ch-label-width": chVar(options.labelWidth, "var(--ch-default-label-width, max-content)"),
     "--ch-input-width": chVar(options.width, "100%"),
   } as unknown as NonNullable<FormItemProps["style"]>;
   return {
@@ -34,6 +34,10 @@ export function chFormItemProps(
     style: {
       ...formItemProps?.style,
       ...chStyle,
+    },
+    wrapperCol: {
+      flex: isBlock ? "1 1 0" : "none",
+      ...formItemProps?.wrapperCol,
     },
   };
 }

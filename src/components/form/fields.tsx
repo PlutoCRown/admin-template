@@ -1,6 +1,8 @@
 import type { ComponentType } from "react";
 import {
+  ProFormCheckbox as AntProFormCheckbox,
   ProFormDigit as AntProFormDigit,
+  ProFormRadio as AntProFormRadio,
   ProFormSelect as AntProFormSelect,
   ProFormText as AntProFormText,
   ProFormTextArea as AntProFormTextArea,
@@ -54,3 +56,5 @@ export const FormText = withChField(AntProFormText);
 export const FormSelect = withChField(AntProFormSelect);
 export const FormDigit = withChField(AntProFormDigit);
 export const FormTextArea = withChField(AntProFormTextArea, true);
+export const FormRadio = withChField(AntProFormRadio.Group);
+export const FormCheckbox = withChField(AntProFormCheckbox.Group);

@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import type { CSSProperties, ReactElement } from "react";
 import {
   ProForm as AntProForm,
   type ProFormItemProps,
@@ -8,24 +8,35 @@ import { chFormItemProps, type ChWidthProps } from "./ch";
 import "./ch-form.css";
 
 export { chFormItemProps, type ChWidthProps } from "./ch";
-export { FormDigit, FormSelect, FormText, FormTextArea } from "./fields";
+export { FormCheckbox, FormDigit, FormRadio, FormSelect, FormText, FormTextArea } from "./fields";
+
+export interface ChProFormProps<T extends Record<string, any>> extends ProFormProps<T> {
+  /** 表单内所有未单独声明 labelWidth 的表单项默认标签宽度，单位为方块字符（1em） */
+  labelWidth?: number;
+}
 
 const BaseProForm = AntProForm as unknown as <T extends Record<string, any>>(
   props: ProFormProps<T>,
 ) => ReactElement;
 
 export function ProForm<T extends Record<string, any> = Record<string, any>>(
-  props: ProFormProps<T>,
+  props: ChProFormProps<T>,
 ) {
+  const { labelWidth, style, layout = "horizontal", className, ...rest } = props;
+  const chStyle = {
+    "--ch-default-label-width": labelWidth == null ? "max-content" : `calc(${labelWidth} * 1em)`,
+    ...style,
+  } as CSSProperties;
   return (
     <BaseProForm<T>
-      layout="horizontal"
+      layout={layout}
       grid={false}
       labelAlign="right"
       labelCol={{ flex: "0 0 auto" }}
       wrapperCol={{ flex: "none" }}
-      {...props}
-      className={["ch-form", props.className].filter(Boolean).join(" ")}
+      {...rest}
+      className={["ch-form", `ch-form-${layout}`, className].filter(Boolean).join(" ")}
+      style={chStyle}
     />
   );
 }

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import {
   AppstoreOutlined,
+  BuildOutlined,
   DashboardOutlined,
   FormOutlined,
   PictureOutlined,
@@ -24,6 +25,11 @@ export const menuRoute: AppMenuRoute = {
       path: "/dashboard",
       name: "工作台",
       icon: <DashboardOutlined />,
+    },
+    {
+      path: "/form-builder",
+      name: "表单生成器",
+      icon: <BuildOutlined />,
     },
     {
       path: "/pro",

@@ -25,6 +25,8 @@
   display: flex !important;
   flex: 1 1 100%;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .ch-form-item .ant-form-item-row {
@@ -52,10 +54,62 @@
   max-width: var(--ch-input-width);
 }
 
+.ch-form-item-block .ant-form-item-row {
+  display: flex;
+  flex-wrap: nowrap;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
 .ch-form-item-block .ant-form-item-control {
-  flex: 1 1 auto;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: none;
+}
+
+.ch-form-item-block .ant-form-item-control-input,
+.ch-form-item-block .ant-form-item-control-input-content {
+  min-width: 0;
+  width: 100%;
+}
+
+.ch-form-item-block
+  :where(
+    .ant-input,
+    .ant-input-affix-wrapper,
+    .ant-input-number,
+    .ant-input-textarea,
+    .ant-select
+  ) {
+  width: 100% !important;
+  max-width: 100%;
+}
+
+.ch-form-vertical .ch-form-item .ant-form-item-row {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ch-form-vertical .ch-form-item .ant-form-item-label {
+  flex: none;
   width: auto;
   max-width: none;
+  padding: 0 0 4px;
+  text-align: start;
+}
+
+.ch-form-vertical .ch-form-item .ant-form-item-label > label {
+  justify-content: flex-start;
+}
+
+.ch-form-vertical .ch-form-item-block .ant-form-item-row {
+  width: 100%;
+}
+
+.ch-form-vertical .ch-form-item-block .ant-form-item-control {
+  width: 100% !important;
 }
 
 .ch-form .ant-pro-form-submitter {
