@@ -1,0 +1,50 @@
+import react from "@vitejs/plugin-react";
+import { defineConfig, lazyPlugins } from "vite-plus";
+
+export default defineConfig({
+  plugins: lazyPlugins(() => [
+    react({
+      compiler: true,
+    }),
+  ]),
+  server: {
+    port: 5173,
+  },
+  fmt: {
+    printWidth: 100,
+    singleQuote: false,
+    semi: true,
+    trailingComma: "all",
+    ignorePatterns: ["dist/**", "node_modules/**", "bun.lock"],
+  },
+  lint: {
+    plugins: ["typescript", "react", "unicorn", "oxc"],
+    categories: {
+      correctness: "error",
+      suspicious: "warn",
+    },
+    env: {
+      browser: true,
+    },
+    ignorePatterns: ["dist/**", "node_modules/**", "bun.lock", "vite.config.ts"],
+    rules: {
+      "unicorn/filename-case": "off",
+      "react/react-in-jsx-scope": "off",
+      "react/no-unstable-nested-components": "off",
+      "vite-plus/prefer-vite-plus-imports": "error",
+      "typescript/no-unsafe-type-assertion": "off",
+      "typescript/no-unnecessary-type-parameters": "off",
+      "typescript/no-unnecessary-type-conversion": "off",
+    },
+    options: {
+      typeAware: true,
+      typeCheck: true,
+    },
+    jsPlugins: [
+      {
+        name: "vite-plus",
+        specifier: "vite-plus/oxlint-plugin",
+      },
+    ],
+  },
+});
