@@ -289,10 +289,14 @@ export function generateFormCode(fields: FormBuilderField[], settings: FormBuild
   );
   const imports = ["ProForm", ...components].join(", ");
   const renderedFields = fields.map(renderFieldCode).join("\n");
-  const formProps = [`labelWidth={${settings.labelWidth}}`];
+  const formProps: string[] = [];
   if (settings.layout === "vertical") {
-    formProps.unshift('layout="vertical"');
-  } else {
+    formProps.push('layout="vertical"');
+  }
+  if (settings.labelWidth > 0) {
+    formProps.push(`labelWidth={${settings.labelWidth}}`);
+  }
+  if (settings.layout !== "vertical") {
     formProps.push(`labelAlign=${JSON.stringify(settings.labelAlign)}`);
   }
   formProps.push("onFinish={handleSubmit}");

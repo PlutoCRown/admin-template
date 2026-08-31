@@ -126,9 +126,7 @@ export function FormBuilderPage() {
   };
 
   const handleLabelWidthChange = (labelWidth: number | null) => {
-    if (labelWidth !== null) {
-      setSettings((current) => ({ ...current, labelWidth }));
-    }
+    setSettings((current) => ({ ...current, labelWidth: labelWidth ?? 0 }));
   };
 
   const handleLabelAlignChange = (labelAlign: string | number) => {
@@ -153,9 +151,10 @@ export function FormBuilderPage() {
       <label className="form-builder-setting-control">
         <span>默认标签宽度</span>
         <InputNumber
-          min={1}
+          min={0}
           max={16}
-          value={settings.labelWidth}
+          value={settings.labelWidth || null}
+          placeholder="自动"
           onChange={handleLabelWidthChange}
         />
       </label>
@@ -218,7 +217,7 @@ export function FormBuilderPage() {
             <ProForm
               submitter={false}
               layout={settings.layout}
-              labelWidth={settings.labelWidth}
+              labelWidth={settings.labelWidth || undefined}
               labelAlign={settings.labelAlign}
               className="form-builder-preview-form"
             >

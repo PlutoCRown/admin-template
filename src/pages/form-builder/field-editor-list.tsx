@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useState,
   type ChangeEvent,
   type CSSProperties,
   type ReactNode,
@@ -8,17 +9,20 @@ import {
 import { DeleteOutlined, HolderOutlined, PlusOutlined } from "@ant-design/icons";
 import {
   DndContext,
+  DragOverlay,
   PointerSensor,
   closestCenter,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   arrayMove,
   useSortable,
   verticalListSortingStrategy,
+  type AnimateLayoutChanges,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ProCard, ProList } from "@ant-design/pro-components";
@@ -122,6 +126,16 @@ function OptionEditorList({ options, onChange }: OptionEditorListProps) {
 }
 
 const DragHandleContext = createContext<ReactNode>(null);
+const animateLayoutChanges: AnimateLayoutChanges = ({ isSorting, wasDragging }) =>
+  !(isSorting || wasDragging);
+
+function OverlayDragHandle() {
+  return (
+    <button type="button" className="form-builder-drag-handle" tabIndex={-1} aria-hidden="true">
+      <HolderOutlined />
+    </button>
+  );
+}
 
 function DragHandle() {
   return useContext(DragHandleContext);
@@ -136,13 +150,13 @@ function SortableListItem({ id, children }: SortableListItemProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id });
+  } = useSortable({ id, animateLayoutChanges });
   const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: isDragging ? undefined : transition,
     position: "relative",
     zIndex: isDragging ? 2 : undefined,
-    boxShadow: isDragging ? "0 10px 28px rgb(0 0 0 / 16%)" : undefined,
+    opacity: isDragging ? 0 : undefined,
   };
   const handle = (
     <button
@@ -287,12 +301,15 @@ function renderSortableItem(
 }
 
 export function FieldEditorList({ fields, onChange }: FieldEditorListProps) {
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [overlayWidth, setOverlayWidth] = useState<number>();
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 6 },
     }),
   );
   const ids = fields.map((field) => field.id);
+  const activeField = activeId ? fields.find((field) => field.id === activeId) : undefined;
 
   const handleUpdate = (id: string, patch: Partial<FormBuilderField>) => {
     onChange(fields.map((field) => (field.id === id ? { ...field, ...patch } : field)));
@@ -303,7 +320,17 @@ export function FieldEditorList({ fields, onChange }: FieldEditorListProps) {
   const handleAdd = () => {
     onChange([...fields, createFormBuilderField()]);
   };
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    setActiveId(String(active.id));
+    setOverlayWidth(active.rect.current.initial?.width);
+  };
+  const handleDragCancel = () => {
+    setActiveId(null);
+    setOverlayWidth(undefined);
+  };
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    setActiveId(null);
+    setOverlayWidth(undefined);
     if (!over || active.id === over.id) {
       return;
     }
@@ -322,7 +349,13 @@ export function FieldEditorList({ fields, onChange }: FieldEditorListProps) {
     renderSortableItem(field, handleUpdate, handleRemove);
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
+    >
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
         <ProList<FormBuilderField>
           rowKey="id"
@@ -338,6 +371,19 @@ export function FieldEditorList({ fields, onChange }: FieldEditorListProps) {
           className="form-builder-field-list"
         />
       </SortableContext>
+      <DragOverlay dropAnimation={null}>
+        {activeField ? (
+          <DragHandleContext.Provider value={<OverlayDragHandle />}>
+            <div className="form-builder-sortable-overlay" style={{ width: overlayWidth }}>
+              <FieldEditorItem
+                field={activeField}
+                onUpdate={handleUpdate}
+                onRemove={handleRemove}
+              />
+            </div>
+          </DragHandleContext.Provider>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 }

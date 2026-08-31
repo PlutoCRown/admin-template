@@ -8,6 +8,13 @@
   flex-wrap: wrap;
   column-gap: 1.5em;
   align-items: flex-start;
+  align-content: flex-start;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  box-sizing: border-box;
 }
 
 .ch-form-item {
@@ -15,9 +22,11 @@
 }
 
 .ch-form-item-inline {
-  display: inline-flex !important;
+  display: flex !important;
+  flex: 0 1 auto;
   width: auto;
   max-width: 100%;
+  min-width: 0;
   vertical-align: top;
 }
 
@@ -34,24 +43,37 @@
   flex-wrap: nowrap;
   align-items: flex-start;
   width: auto;
+  min-width: 0;
 }
 
 .ch-form-item .ant-form-item-label {
-  flex: 0 0 var(--ch-label-width);
+  flex: 0 0 auto;
   width: var(--ch-label-width);
   max-width: var(--ch-label-width);
   padding: 0;
 }
 
 .ch-form-item .ant-form-item-label > label {
-  height: auto;
   white-space: nowrap;
 }
 
+.ch-form-item-inline .ant-form-item-row {
+  width: max-content;
+  max-width: 100%;
+}
+
 .ch-form-item-inline .ant-form-item-control {
-  flex: 0 0 var(--ch-input-width);
+  flex: 1 1 var(--ch-input-width) !important;
+  min-width: 0 !important;
   width: var(--ch-input-width);
   max-width: var(--ch-input-width);
+}
+
+.ch-form-item-inline .ant-form-item-control-input,
+.ch-form-item-inline .ant-form-item-control-input-content {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 .ch-form-item-block .ant-form-item-row {
@@ -87,6 +109,20 @@
   max-width: 100%;
 }
 
+.ch-form-item :where(.ant-radio-group, .ant-checkbox-group) {
+  display: flex;
+  flex-wrap: wrap;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ch-form-item :where(.ant-radio-wrapper, .ant-checkbox-wrapper) {
+  max-width: 100%;
+  white-space: normal;
+}
+
 .ch-form-vertical .ch-form-item .ant-form-item-row {
   flex-direction: column;
   align-items: stretch;
@@ -106,6 +142,12 @@
 
 .ch-form-vertical .ch-form-item-block .ant-form-item-row {
   width: 100%;
+}
+
+.ch-form-vertical .ch-form-item-inline .ant-form-item-control {
+  flex: 0 1 auto !important;
+  width: var(--ch-input-width);
+  max-width: 100%;
 }
 
 .ch-form-vertical .ch-form-item-block .ant-form-item-control {

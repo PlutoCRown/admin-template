@@ -9,13 +9,21 @@ import {
 import { CloseOutlined, PlusOutlined } from "@ant-design/icons";
 import {
   DndContext,
+  DragOverlay,
   PointerSensor,
   closestCenter,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
 } from "@dnd-kit/core";
-import { SortableContext, arrayMove, rectSortingStrategy, useSortable } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  useSortable,
+  type AnimateLayoutChanges,
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { App, Image, Upload, type UploadProps } from "antd";
 import { getErrorMessage } from "#api/client";
@@ -35,31 +43,26 @@ interface SortableFileCardProps {
   onRemove: (uid: string) => void;
 }
 
-const DROP_TRANSITION_DURATION = 250;
-const DROP_TRANSITION_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
+const animateLayoutChanges: AnimateLayoutChanges = ({ isSorting, wasDragging }) =>
+  !(isSorting || wasDragging);
 
 function handleRemovePointerDown(event: PointerEvent<HTMLButtonElement>) {
   event.stopPropagation();
 }
 
-function getSortableTransition(isDragging: boolean, transition?: string) {
-  if (isDragging) {
-    return undefined;
-  }
-
-  const transformTransition =
-    transition ?? `transform ${DROP_TRANSITION_DURATION}ms ${DROP_TRANSITION_EASING}`;
-  return `${transformTransition}, z-index 0s ${DROP_TRANSITION_DURATION}ms`;
+function FileCardPreview({ file }: { file: MediaFile }) {
+  return (
+    <div className="sortable-upload-item">
+      <img src={file.url} alt={file.name} />
+    </div>
+  );
 }
 
 function SortableFileCard({ file, onPreview, onRemove }: SortableFileCardProps) {
   const draggedRef = useRef(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: file.uid,
-    transition: {
-      duration: DROP_TRANSITION_DURATION,
-      easing: DROP_TRANSITION_EASING,
-    },
+    animateLayoutChanges,
   });
 
   useEffect(() => {
@@ -70,7 +73,8 @@ function SortableFileCard({ file, onPreview, onRemove }: SortableFileCardProps) 
 
   const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition: getSortableTransition(isDragging, transition),
+    transition: isDragging ? undefined : transition,
+    opacity: isDragging ? 0 : undefined,
   };
 
   const handlePreview = () => {
@@ -116,6 +120,7 @@ export function SortableUpload({ value = [], onChange, max = 8 }: SortableUpload
     valueRef.current = value;
   }, [value]);
   const [previewUid, setPreviewUid] = useState<string | undefined>();
+  const [activeId, setActiveId] = useState<string | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
@@ -123,9 +128,19 @@ export function SortableUpload({ value = [], onChange, max = 8 }: SortableUpload
   );
 
   const ids = value.map((item) => item.uid);
+  const activeFile = activeId ? value.find((item) => item.uid === activeId) : undefined;
+
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    setActiveId(String(active.id));
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    setActiveId(null);
     if (!over || active.id === over.id) {
       return;
     }
@@ -178,7 +193,13 @@ export function SortableUpload({ value = [], onChange, max = 8 }: SortableUpload
 
   return (
     <div>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
         <SortableContext items={ids} strategy={rectSortingStrategy}>
           <div className="sortable-upload-grid">
             {fileCards}
@@ -198,6 +219,13 @@ export function SortableUpload({ value = [], onChange, max = 8 }: SortableUpload
             ) : null}
           </div>
         </SortableContext>
+        <DragOverlay dropAnimation={null}>
+          {activeFile ? (
+            <div className="sortable-upload-card is-overlay">
+              <FileCardPreview file={activeFile} />
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
       <Image.PreviewGroup
         items={previewItems}
