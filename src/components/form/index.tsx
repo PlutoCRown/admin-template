@@ -24,6 +24,7 @@ export {
   FormTime,
   FormTreeSelect,
 } from "./fields";
+export { FormTextList, TextList } from "./text-list";
 
 export interface ChProFormProps<T extends Record<string, any>> extends ProFormProps<T> {
   /** 表单内所有未单独声明 labelWidth 的表单项默认标签宽度，单位为方块字符（1em）。不传或 0 时按文字自动撑开 */
@@ -41,9 +42,7 @@ export function ProForm<T extends Record<string, any> = Record<string, any>>(
   const chStyle = {
     width: "100%",
     height: "100%",
-    ...(labelWidth
-      ? { "--ch-default-label-width": `calc(${labelWidth} * var(--form-ch))` }
-      : {}),
+    ...(labelWidth ? { "--ch-default-label-width": `calc(${labelWidth} * var(--form-ch))` } : {}),
     ...style,
   } as CSSProperties;
   return (

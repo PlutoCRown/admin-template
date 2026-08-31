@@ -126,6 +126,17 @@
   line-height: 22px;
 }
 
+.settings-modal-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.settings-modal-panel-header > div {
+  min-width: 0;
+}
+
 .settings-modal-section {
   display: flex;
   flex-direction: column;
@@ -158,5 +169,15 @@
 
   .settings-modal-panel {
     padding: 20px;
+  }
+
+  .settings-modal-panel-header {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .settings-modal-panel-header > .ant-btn,
+  .settings-modal-panel-header > .ant-popover-open {
+    margin-bottom: 16px;
   }
 }

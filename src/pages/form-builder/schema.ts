@@ -12,7 +12,8 @@ export type FormBuilderFieldType =
   | "treeSelect"
   | "switch"
   | "segmented"
-  | "money";
+  | "money"
+  | "textList";
 
 export type FormBuilderLayout = "horizontal" | "vertical";
 
@@ -35,6 +36,12 @@ export interface FormBuilderField {
   block: boolean;
   /** antd 支持 allowClear 的类型可配；不支持的类型保持 undefined */
   allowClear?: boolean;
+  /** textList：是否显示新增按钮，默认 true */
+  creator?: boolean;
+  /** textList：是否可拖拽排序，默认 true */
+  sortable?: boolean;
+  /** textList：是否显示删除按钮，默认 true */
+  removable?: boolean;
   placeholder: string;
   options: string[];
 }
@@ -56,7 +63,8 @@ interface FieldTypeDefinition {
     | "FormTreeSelect"
     | "FormSwitch"
     | "FormSegmented"
-    | "FormMoney";
+    | "FormMoney"
+    | "FormTextList";
   valueType: "string" | "number" | "array" | "boolean";
   defaultWidth: number;
   defaultBlock: boolean;
@@ -175,6 +183,14 @@ export const FIELD_TYPE_DEFINITIONS: FieldTypeDefinition[] = [
     defaultWidth: 12,
     defaultBlock: false,
   },
+  {
+    value: "textList",
+    label: "文本列表",
+    componentName: "FormTextList",
+    valueType: "array",
+    defaultWidth: 24,
+    defaultBlock: true,
+  },
 ];
 
 export const FIELD_TYPE_OPTIONS = FIELD_TYPE_DEFINITIONS.map((definition) => ({
@@ -253,6 +269,20 @@ const defaultFields: FormBuilderField[] = [
     block: false,
     placeholder: "请选择兴趣爱好",
     options: ["阅读", "旅行", "运动", "音乐"],
+  },
+  {
+    id: "builder_tags",
+    name: "tags",
+    label: "标签",
+    type: "textList",
+    width: 24,
+    required: false,
+    block: true,
+    placeholder: "请输入标签",
+    options: [],
+    creator: true,
+    sortable: true,
+    removable: true,
   },
   {
     id: "builder_start_time",
@@ -364,8 +394,11 @@ const PLACEHOLDER_HIDDEN_TYPES = new Set<FormBuilderFieldType>([
   "segmented",
 ]);
 
-/** antd 无 allowClear 的控件：Radio / Checkbox / Switch / Segmented */
-const ALLOW_CLEAR_HIDDEN_TYPES = PLACEHOLDER_HIDDEN_TYPES;
+/** antd 无 allowClear 的控件：Radio / Checkbox / Switch / Segmented / TextList */
+const ALLOW_CLEAR_HIDDEN_TYPES = new Set<FormBuilderFieldType>([
+  ...PLACEHOLDER_HIDDEN_TYPES,
+  "textList",
+]);
 
 const WIDTH_HIDDEN_TYPES = new Set<FormBuilderFieldType>([
   "radio",
@@ -418,6 +451,13 @@ function getDefaultAllowClear(type: FormBuilderFieldType): boolean | undefined {
   return true;
 }
 
+function getDefaultListControl(type: FormBuilderFieldType): boolean | undefined {
+  if (type !== "textList") {
+    return undefined;
+  }
+  return true;
+}
+
 export function createFormBuilderField(type: FormBuilderFieldType = "text"): FormBuilderField {
   fieldSequence += 1;
   const definition = getTypeDefinition(type);
@@ -430,6 +470,9 @@ export function createFormBuilderField(type: FormBuilderFieldType = "text"): For
     required: false,
     block: definition.defaultBlock,
     allowClear: getDefaultAllowClear(type),
+    creator: getDefaultListControl(type),
+    sortable: getDefaultListControl(type),
+    removable: getDefaultListControl(type),
     placeholder: getDefaultPlaceholder(type),
     options: hasOptions(type) ? ["选项一", "选项二"] : [],
   };
@@ -445,6 +488,9 @@ export function applyFieldTypeDefaults(
     width: getDefaultWidth(type),
     block: definition.defaultBlock,
     allowClear: getDefaultAllowClear(type),
+    creator: getDefaultListControl(type),
+    sortable: getDefaultListControl(type),
+    removable: getDefaultListControl(type),
     placeholder: getDefaultPlaceholder(type),
     options: hasOptions(type) && field.options.length === 0 ? ["选项一", "选项二"] : field.options,
   };
@@ -462,6 +508,10 @@ export function fieldTypeHasAllowClear(type: FormBuilderFieldType) {
   return !ALLOW_CLEAR_HIDDEN_TYPES.has(type);
 }
 
+export function fieldTypeHasListControls(type: FormBuilderFieldType) {
+  return type === "textList";
+}
+
 export function fieldTypeHasWidth(type: FormBuilderFieldType) {
   return !WIDTH_HIDDEN_TYPES.has(type);
 }
@@ -472,6 +522,27 @@ export function getFieldAllowClear(field: FormBuilderField) {
     return false;
   }
   return field.allowClear ?? true;
+}
+
+export function getFieldCreator(field: FormBuilderField) {
+  if (!fieldTypeHasListControls(field.type)) {
+    return false;
+  }
+  return field.creator ?? true;
+}
+
+export function getFieldSortable(field: FormBuilderField) {
+  if (!fieldTypeHasListControls(field.type)) {
+    return false;
+  }
+  return field.sortable ?? true;
+}
+
+export function getFieldRemovable(field: FormBuilderField) {
+  if (!fieldTypeHasListControls(field.type)) {
+    return false;
+  }
+  return field.removable ?? true;
 }
 
 function getSafeName(field: FormBuilderField, index: number) {
@@ -499,6 +570,9 @@ function getFieldTypeScriptType(field: FormBuilderField) {
   if (field.type === "switch") {
     return "boolean";
   }
+  if (field.type === "textList") {
+    return "string[]";
+  }
   if (field.type === "checkbox" || field.type === "cascader") {
     return `Array<${getOptionUnion(field)}>`;
   }
@@ -523,7 +597,11 @@ function renderFieldCode(field: FormBuilderField, index: number) {
     props.push(`width={${field.width}}`);
   }
   if (field.required) {
-    props.push("rules={[{ required: true }]}");
+    props.push(
+      field.type === "textList"
+        ? 'rules={[{ required: true, type: "array", min: 1 }]}'
+        : "rules={[{ required: true }]}",
+    );
   }
   if (field.block) {
     props.push("block");
@@ -536,6 +614,17 @@ function renderFieldCode(field: FormBuilderField, index: number) {
   }
   if (hasOptions(field.type)) {
     props.push(`options={${JSON.stringify(field.options)}}`);
+  }
+  if (fieldTypeHasListControls(field.type)) {
+    if (!getFieldSortable(field)) {
+      props.push("sortable={false}");
+    }
+    if (!getFieldCreator(field)) {
+      props.push("creator={false}");
+    }
+    if (!getFieldRemovable(field)) {
+      props.push("removable={false}");
+    }
   }
 
   const renderedProps = props.map((prop) => `        ${prop}`).join("\n");
@@ -595,11 +684,20 @@ export function generateFormSchema(fields: FormBuilderField[], settings: FormBui
   return JSON.stringify(
     {
       settings,
-      fields: fields.map(({ id: _id, width, allowClear, ...field }) => ({
-        ...field,
-        ...(fieldTypeHasWidth(field.type) && width != null ? { width } : {}),
-        ...(fieldTypeHasAllowClear(field.type) ? { allowClear: allowClear ?? true } : {}),
-      })),
+      fields: fields.map(
+        ({ id: _id, width, allowClear, creator, sortable, removable, ...field }) => ({
+          ...field,
+          ...(fieldTypeHasWidth(field.type) && width != null ? { width } : {}),
+          ...(fieldTypeHasAllowClear(field.type) ? { allowClear: allowClear ?? true } : {}),
+          ...(fieldTypeHasListControls(field.type)
+            ? {
+                creator: creator ?? true,
+                sortable: sortable ?? true,
+                removable: removable ?? true,
+              }
+            : {}),
+        }),
+      ),
     },
     null,
     2,
@@ -608,6 +706,9 @@ export function generateFormSchema(fields: FormBuilderField[], settings: FormBui
 
 function getJsonSchemaProperty(field: FormBuilderField, index: number) {
   const base = { title: getSafeLabel(field, index) };
+  if (field.type === "textList") {
+    return { ...base, type: "array", items: { type: "string" } };
+  }
   if (field.type === "checkbox" || field.type === "cascader") {
     return {
       ...base,
@@ -675,6 +776,10 @@ export function generateSamplePayload(fields: FormBuilderField[]) {
     }
     if (field.type === "checkbox") {
       payload[name] = field.options.slice(0, 2);
+      return;
+    }
+    if (field.type === "textList") {
+      payload[name] = ["示例一", "示例二"];
       return;
     }
     if (field.type === "cascader") {

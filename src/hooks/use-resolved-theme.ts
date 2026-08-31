@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useThemeStore, type ThemeMode } from "#stores/theme";
+import { useGlobalConfigStore, type ThemeMode } from "#stores/global-config";
 
 function getSystemPrefersDark() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -13,7 +13,7 @@ export function resolveThemeMode(mode: ThemeMode, systemDark: boolean): "light" 
 }
 
 export function useResolvedTheme() {
-  const mode = useThemeStore((state) => state.mode);
+  const mode = useGlobalConfigStore((state) => state.themeMode);
   const [systemDark, setSystemDark] = useState(getSystemPrefersDark);
 
   useEffect(() => {

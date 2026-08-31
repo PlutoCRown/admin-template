@@ -1,0 +1,50 @@
+.ch-text-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+.ch-text-list-body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 用 margin 代替 gap，避免 DragOverlay 归位测量和 flex gap 不一致 */
+.ch-text-list-row + .ch-text-list-row {
+  margin-block-start: 6px;
+}
+
+.ch-text-list-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ch-text-list-item .ant-input {
+  flex: 1;
+  min-width: 0;
+  width: auto !important;
+}
+
+.ch-text-list-creator {
+  margin-block-start: 8px;
+}
+
+.ch-text-list-overlay {
+  cursor: grabbing;
+}
+
+.ch-text-list-drag-handle {
+  color: var(--ant-color-text-secondary);
+  cursor: grab;
+  touch-action: none;
+}
+
+.ch-text-list-drag-handle:hover {
+  color: var(--ant-color-primary);
+}
+
+.ch-text-list-drag-handle:active {
+  cursor: grabbing;
+}

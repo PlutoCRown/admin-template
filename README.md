@@ -34,7 +34,7 @@
 - **表单生成器**：可视化配字段与表单设置，实时预览，导出 TSX / 类型 / JSON Schema 等；状态持久化在本地。
 - **Pro 组件示例**：ProTable、ProForm、ProList、SchemaForm、ProDescriptions。
 - **可排序上传**：媒体图册等场景的拖拽排序上传。
-- **主题**：浅色 / 深色 / 跟随系统；设置面板接近全屏双栏。
+- **个性化设置**：浅色 / 深色 / 跟随系统；侧边菜单支持显示开关、分级拖拽排序与一键重置，设置会在本地持久化。
 - **超椭圆圆角**：Chromium 下通过 `corner-shape: squircle` 渐进增强（配合调大后的 `borderRadius` token）。
 - **鉴权骨架**：登录页、路由守卫、Zustand 用户态。
 
@@ -81,12 +81,12 @@ admin-template/
 ├── mock-server/          # Elysia Mock API
 ├── src/
 │   ├── api/              # 请求封装与接口
-│   ├── components/       # 通用组件（form、pro-table、settings-modal…）
+│   ├── components/       # 通用组件（form、pro-table、sortable-upload…）
 │   ├── hooks/
 │   ├── layouts/          # 侧栏布局、账号栏
-│   ├── pages/            # 页面（dashboard、form-builder、pro、media…）
+│   ├── pages/            # 页面（dashboard、form-builder、pro、media、settings…）
 │   ├── router/           # 路由、菜单、鉴权
-│   ├── stores/           # Zustand（user / theme / form-builder）
+│   ├── stores/           # Zustand（user / global-config / form-builder）
 │   ├── styles/           # 全局样式（含 corner-shape 等）
 │   └── App.tsx
 ├── package.json

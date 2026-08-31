@@ -15,6 +15,7 @@ import {
   FormSwitch,
   FormText,
   FormTextArea,
+  FormTextList,
   FormTime,
   FormTreeSelect,
   ProForm,
@@ -27,6 +28,9 @@ import {
   fieldTypeHasAllowClear,
   fieldTypeHasOptions,
   getFieldAllowClear,
+  getFieldCreator,
+  getFieldRemovable,
+  getFieldSortable,
   type FormBuilderField,
   type FormBuilderSettings,
 } from "./schema";
@@ -133,6 +137,18 @@ function renderPreviewField(field: FormBuilderField) {
       return (
         <FormMoney key={field.id} {...commonProps} placeholder={field.placeholder || undefined} />
       );
+    case "textList":
+      return (
+        <FormTextList
+          key={field.id}
+          {...commonProps}
+          placeholder={field.placeholder || undefined}
+          creator={getFieldCreator(field)}
+          sortable={getFieldSortable(field)}
+          removable={getFieldRemovable(field)}
+          rules={field.required ? [{ required: true, type: "array", min: 1 } as const] : undefined}
+        />
+      );
     default:
       return (
         <FormText key={field.id} {...commonProps} placeholder={field.placeholder || undefined} />
@@ -198,13 +214,7 @@ function EditorSettingsModal() {
       }}
     >
       <FormSegmented name="layout" label="表单布局" options={LAYOUT_OPTIONS} />
-      <FormDigit
-        name="labelWidth"
-        label="默认标签宽度"
-        min={0}
-        max={16}
-        placeholder="自动"
-      />
+      <FormDigit name="labelWidth" label="默认标签宽度" min={0} max={16} placeholder="自动" />
       <FormSegmented
         name="labelAlign"
         label="标签对齐"

@@ -90,48 +90,10 @@
   margin-block-start: 12px;
 }
 
-.form-builder-option-list-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
 .form-builder-option-list-title {
   font-size: 13px;
   font-weight: 500;
   line-height: 22px;
-}
-
-.form-builder-option-list-body {
-  display: flex;
-  flex-direction: column;
-}
-
-/* 用 margin 代替 gap，避免 DragOverlay 归位测量和 flex gap 不一致 */
-.form-builder-sortable-option + .form-builder-sortable-option {
-  margin-block-start: 6px;
-}
-
-.form-builder-option-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.form-builder-option-item .ant-input {
-  flex: 1;
-  min-width: 0;
-}
-
-.form-builder-option-overlay {
-  cursor: grabbing;
-  box-shadow: none;
-  transition: box-shadow 180ms ease;
-}
-
-.form-builder-option-overlay.is-lifted {
-  box-shadow: 0 8px 20px rgb(0 0 0 / 14%);
 }
 
 .form-builder-drag-handle {

@@ -6,12 +6,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import {
-  CloseOutlined,
-  HolderOutlined,
-  MinusCircleOutlined,
-  PlusOutlined,
-} from "@ant-design/icons";
+import { CloseOutlined, HolderOutlined } from "@ant-design/icons";
 import {
   DndContext,
   DragOverlay,
@@ -26,41 +21,29 @@ import {
 } from "@dnd-kit/core";
 import {
   SortableContext,
-  arrayMove,
   useSortable,
   verticalListSortingStrategy,
   type AnimateLayoutChanges,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ProCard } from "@ant-design/pro-components";
-import { Button, Form, Input, Popconfirm } from "antd";
+import { Button, Form, Popconfirm } from "antd";
 import { DragOverlaySurface } from "#components/drag-overlay-surface";
-import { FormDigit, FormSelect, FormSwitch, FormText, ProForm } from "#components/form";
+import { FormDigit, FormSelect, FormSwitch, FormText, ProForm, TextList } from "#components/form";
 import { useFormBuilderStore } from "#stores/form-builder";
 import {
   FIELD_TYPE_OPTIONS,
   fieldTypeHasAllowClear,
+  fieldTypeHasListControls,
   fieldTypeHasOptions,
   fieldTypeHasPlaceholder,
   fieldTypeHasWidth,
   type FormBuilderFieldType,
 } from "./schema";
 
-interface OptionEditorListProps {
-  options: string[];
-  onChange: (options: string[]) => void;
-}
-
 interface SortableListItemProps {
   id: string;
   children: ReactNode;
-}
-
-interface SortableOptionItemProps {
-  id: string;
-  value: string;
-  onChange: (value: string) => void;
-  onRemove: () => void;
 }
 
 function DragHandleButton({
@@ -100,194 +83,6 @@ const dropAnimation: DropAnimation = {
     })(params);
   },
 };
-
-let optionIdSequence = 0;
-function createOptionId() {
-  optionIdSequence += 1;
-  return `form_builder_option_${Date.now()}_${optionIdSequence}`;
-}
-
-function reconcileOptionIds(prev: string[], length: number) {
-  if (prev.length === length) {
-    return prev;
-  }
-  if (length > prev.length) {
-    return [...prev, ...Array.from({ length: length - prev.length }, () => createOptionId())];
-  }
-  return prev.slice(0, length);
-}
-
-function OptionRowView({
-  value,
-  dragHandle,
-  onChange,
-  onRemove,
-}: {
-  value: string;
-  dragHandle: ReactNode;
-  onChange: (value: string) => void;
-  onRemove: () => void;
-}) {
-  return (
-    <div className="form-builder-option-item">
-      {dragHandle}
-      <Input
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder="选项文案"
-      />
-      <Button
-        type="text"
-        icon={<MinusCircleOutlined />}
-        aria-label={`删除选项 ${value || ""}`}
-        onClick={onRemove}
-      />
-    </div>
-  );
-}
-
-function SortableOptionItem({ id, value, onChange, onRemove }: SortableOptionItemProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    setActivatorNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id,
-    transition: SORTABLE_TRANSITION,
-    animateLayoutChanges,
-  });
-  const style: CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition: isDragging ? undefined : transition,
-    opacity: isDragging ? 0 : undefined,
-  };
-
-  return (
-    <div ref={setNodeRef} style={style} className="form-builder-sortable-option">
-      <OptionRowView
-        value={value}
-        onChange={onChange}
-        onRemove={onRemove}
-        dragHandle={
-          <DragHandleButton
-            ref={setActivatorNodeRef}
-            aria-label="拖动调整选项顺序"
-            {...attributes}
-            {...listeners}
-          />
-        }
-      />
-    </div>
-  );
-}
-
-function OptionEditorList({ options, onChange }: OptionEditorListProps) {
-  const [ids, setIds] = useState<string[]>(() => options.map(() => createOptionId()));
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [overlayWidth, setOverlayWidth] = useState<number>();
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 6 },
-    }),
-  );
-  const syncedIds = reconcileOptionIds(ids, options.length);
-  if (syncedIds !== ids) {
-    setIds(syncedIds);
-  }
-  const activeIndex = activeId ? syncedIds.indexOf(activeId) : -1;
-  const activeValue = activeIndex >= 0 ? options[activeIndex] : undefined;
-
-  const handleValueChange = (index: number, value: string) => {
-    onChange(options.map((item, itemIndex) => (itemIndex === index ? value : item)));
-  };
-  const handleRemove = (index: number) => {
-    onChange(options.filter((_, itemIndex) => itemIndex !== index));
-    setIds((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
-  };
-  const handleAdd = () => {
-    onChange([...options, `选项${options.length + 1}`]);
-    setIds((prev) => [...prev, createOptionId()]);
-  };
-  const handleDragStart = ({ active }: DragStartEvent) => {
-    setActiveId(String(active.id));
-    setOverlayWidth(active.rect.current.initial?.width);
-  };
-  const handleDragCancel = () => {
-    setActiveId(null);
-    setOverlayWidth(undefined);
-  };
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    setActiveId(null);
-    setOverlayWidth(undefined);
-    if (!over || active.id === over.id) {
-      return;
-    }
-    const fromIndex = syncedIds.indexOf(String(active.id));
-    const toIndex = syncedIds.indexOf(String(over.id));
-    if (fromIndex < 0 || toIndex < 0) {
-      return;
-    }
-    onChange(arrayMove(options, fromIndex, toIndex));
-    setIds((prev) => arrayMove(reconcileOptionIds(prev, options.length), fromIndex, toIndex));
-  };
-
-  return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragCancel={handleDragCancel}
-    >
-      <div className="form-builder-option-list">
-        <div className="form-builder-option-list-header">
-          <div className="form-builder-option-list-title">选项</div>
-          <Button size="small" type="dashed" icon={<PlusOutlined />} onClick={handleAdd}>
-            新增选项
-          </Button>
-        </div>
-        <SortableContext items={syncedIds} strategy={verticalListSortingStrategy}>
-          <div className="form-builder-option-list-body">
-            {options.map((value, index) => {
-              const id = syncedIds[index];
-              if (!id) {
-                return null;
-              }
-              return (
-                <SortableOptionItem
-                  key={id}
-                  id={id}
-                  value={value}
-                  onChange={(next) => handleValueChange(index, next)}
-                  onRemove={() => handleRemove(index)}
-                />
-              );
-            })}
-          </div>
-        </SortableContext>
-      </div>
-      <DragOverlay dropAnimation={dropAnimation}>
-        {activeValue != null && activeId ? (
-          <DragOverlaySurface
-            className="form-builder-sortable-option form-builder-option-overlay"
-            style={{ width: overlayWidth }}
-          >
-            <OptionRowView
-              value={activeValue}
-              onChange={() => undefined}
-              onRemove={() => undefined}
-              dragHandle={<DragHandleButton overlay />}
-            />
-          </DragOverlaySurface>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
-  );
-}
 
 function OverlayDragHandle() {
   return <DragHandleButton overlay />;
@@ -379,6 +174,9 @@ function FieldEditorItem({ id }: { id: string }) {
           required: field.required,
           block: field.block,
           allowClear: field.allowClear ?? true,
+          creator: field.creator ?? true,
+          sortable: field.sortable ?? true,
+          removable: field.removable ?? true,
         }}
         onValuesChange={(changed) => {
           if (changed.type !== undefined) {
@@ -424,12 +222,25 @@ function FieldEditorItem({ id }: { id: string }) {
         {fieldTypeHasAllowClear(field.type) ? (
           <FormSwitch name="allowClear" label="允许清空" />
         ) : null}
+        {fieldTypeHasListControls(field.type) ? (
+          <>
+            <FormSwitch name="creator" label="允许新增" />
+            <FormSwitch name="sortable" label="允许排序" />
+            <FormSwitch name="removable" label="允许删除" />
+          </>
+        ) : null}
       </ProForm>
       {fieldTypeHasOptions(field.type) ? (
-        <OptionEditorList
-          options={field.options}
-          onChange={(options) => updateField(id, { options })}
-        />
+        <div className="form-builder-option-list">
+          <div className="form-builder-option-list-title">选项</div>
+          <TextList
+            value={field.options}
+            onChange={(options) => updateField(id, { options })}
+            placeholder="选项文案"
+            creatorText="新增选项"
+            creatorValue={(list) => `选项${list.length + 1}`}
+          />
+        </div>
       ) : null}
     </ProCard>
   );

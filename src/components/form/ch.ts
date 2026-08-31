@@ -22,8 +22,7 @@ export function chFormItemProps(
   const chStyle = {
     ...(options.labelWidth != null
       ? {
-          "--ch-label-width":
-            options.labelWidth === 0 ? "max-content" : chEm(options.labelWidth),
+          "--ch-label-width": options.labelWidth === 0 ? "max-content" : chEm(options.labelWidth),
         }
       : {}),
     ...(options.width != null ? { "--ch-input-width": chEm(options.width) } : {}),
