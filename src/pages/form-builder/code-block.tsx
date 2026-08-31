@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { CopyOutlined } from "@ant-design/icons";
 import { App, Button } from "antd";
-import { escapeCode, highlightCode } from "./highlight";
+import { escapeHtml } from "#utils/escape-html";
+import { highlightCode } from "./highlight";
 import styles from "./code-block.module.css";
 
 interface CodeBlockProps {
@@ -33,7 +34,7 @@ export function CodeBlock({ value, language }: CodeBlockProps) {
   const highlighted =
     highlightState?.source === value && highlightState.language === language
       ? highlightState.html
-      : escapeCode(value);
+      : escapeHtml(value);
 
   const handleCopy = async () => {
     setCopying(true);

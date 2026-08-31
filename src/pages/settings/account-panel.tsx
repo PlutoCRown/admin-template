@@ -2,7 +2,7 @@ import { useState } from "react";
 import { LogoutOutlined, UserOutlined } from "@ant-design/icons";
 import { App, Avatar, Button, Descriptions, Space, Typography } from "antd";
 import { useNavigate } from "react-router";
-import { logoutApi } from "#api/auth";
+import { logoutApi } from "#api/login";
 import { useUserStore } from "#stores/user";
 
 interface AccountPanelProps {

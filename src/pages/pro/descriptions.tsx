@@ -1,8 +1,7 @@
 import { ProDescriptions } from "@ant-design/pro-components";
 import { Card } from "antd";
 import { useSearchParams } from "react-router";
-import { getArticleApi, getArticleListApi } from "#api/articles";
-import type { Article } from "#api/types";
+import { getArticleApi, getArticleListApi, type Article } from "#api/pro/articles";
 import { PageContainer } from "#components/page-container";
 
 export function ProDescriptionsPage() {

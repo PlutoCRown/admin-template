@@ -80,7 +80,7 @@ bun run fmt        # 格式化
 admin-template/
 ├── mock-server/          # Elysia Mock API
 ├── src/
-│   ├── api/              # 请求封装与接口
+│   ├── api/              # base 请求封装 + 按 pages 镜像的接口
 │   ├── components/       # 通用组件（form、pro-table、sortable-upload…）
 │   ├── hooks/
 │   ├── layouts/          # 侧栏布局、账号栏

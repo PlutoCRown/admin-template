@@ -1,4 +1,5 @@
 import { createHighlighter, type BundledLanguage } from "shiki";
+import { escapeHtml } from "#utils/escape-html";
 
 const LANGUAGE_MAP: Record<string, BundledLanguage> = {
   ts: "typescript",
@@ -15,14 +16,6 @@ function getHighlighter() {
     langs: ["tsx", "typescript", "json"],
   });
   return highlighterPromise;
-}
-
-function escapeHtml(value: string) {
-  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-}
-
-export function escapeCode(value: string) {
-  return escapeHtml(value);
 }
 
 export async function highlightCode(value: string, language: string) {

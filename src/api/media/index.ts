@@ -1,5 +1,7 @@
-import { request } from "./client";
+import { request } from "#api/base/client";
 import type { MediaFile, Product, ProductPayload } from "./types";
+
+export type { MediaFile, Product, ProductPayload } from "./types";
 
 export function uploadFileApi(file: File) {
   const data = new FormData();

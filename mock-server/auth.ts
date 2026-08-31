@@ -1,6 +1,6 @@
 import { ApiError, ErrorCode } from "./codes";
 import { users } from "./data";
-import type { UserProfile } from "../src/api/types";
+import type { UserProfile } from "../src/api/login/types";
 
 const tokens = new Map<string, string>();
 

@@ -10,7 +10,7 @@
 
 - `src/components/**`：`form`、`pro-table`、`page-container`、`sortable-upload` 等
 - `src/layouts/**`、路由守卫、`src/styles/global.css`
-- 横切能力：`src/stores/user.ts`、`src/stores/global-config.ts`、`src/api/client.ts`、`src/hooks/**`
+- 横切能力：`src/stores/user.ts`、`src/stores/global-config.ts`、`src/api/base/**`、`src/hooks/**`
 
 **演示（可整页替换，不要往这里堆可复用 UI）：**
 

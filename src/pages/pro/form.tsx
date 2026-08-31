@@ -1,6 +1,5 @@
 import { App, Card } from "antd";
-import { createStaffApi } from "#api/staff";
-import type { StaffPayload } from "#api/types";
+import { createStaffApi, type StaffPayload } from "#api/pro/staff";
 import { FormSelect, FormText, ProForm } from "#components/form";
 import { PageContainer } from "#components/page-container";
 

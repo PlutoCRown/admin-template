@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { App } from "antd";
-import { bindApiNotification } from "#api/notify";
+import { bindApiNotification } from "#api/base/notify";
 
 export function AppFeedback() {
   const { notification } = App.useApp();

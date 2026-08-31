@@ -2,9 +2,8 @@ import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 
 import { CloseOutlined, PlusOutlined } from "@ant-design/icons";
 import { arrayMove, rectSortingStrategy } from "@dnd-kit/sortable";
 import { App, Image, Upload, type UploadProps } from "antd";
-import { getErrorMessage } from "#api/client";
-import { uploadFileApi } from "#api/products";
-import type { MediaFile } from "#api/types";
+import { getErrorMessage } from "#api/base/client";
+import { uploadFileApi, type MediaFile } from "#api/media";
 import {
   SortableItem,
   SortableList,

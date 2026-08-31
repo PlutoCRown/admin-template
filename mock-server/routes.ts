@@ -1,5 +1,6 @@
 import { Elysia, t } from "elysia";
-import type { ProductPayload, StaffPayload } from "../src/api/types";
+import type { ProductPayload } from "../src/api/media/types";
+import type { StaffPayload } from "../src/api/pro/types";
 import { bearerToken, issueToken, requireUser, revokeToken } from "./auth";
 import { ApiError, ErrorCode } from "./codes";
 import { articles, fileToMedia, passwords, products, staff, users } from "./data";

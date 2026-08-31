@@ -2,7 +2,7 @@ import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { LoginForm, ProFormText } from "@ant-design/pro-components";
 import { App, Spin, Typography } from "antd";
 import { Navigate, useNavigate } from "react-router";
-import { loginApi } from "#api/auth";
+import { loginApi } from "#api/login";
 import { useStoreHydration } from "#hooks/use-store-hydration";
 import { DEMO_ACCOUNTS } from "#constants/demo";
 import { useUserStore } from "#stores/user";

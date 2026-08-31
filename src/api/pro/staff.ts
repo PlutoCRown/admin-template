@@ -1,5 +1,8 @@
-import { request } from "./client";
-import type { PageResult, Staff, StaffPayload, StaffQuery } from "./types";
+import { request } from "#api/base/client";
+import type { PageResult } from "#api/base/types";
+import type { Staff, StaffPayload, StaffQuery } from "./types";
+
+export type { Staff, StaffPayload, StaffQuery, UserStatus } from "./types";
 
 export function getStaffListApi(params: StaffQuery) {
   return request.get<PageResult<Staff>>("/staff", params);

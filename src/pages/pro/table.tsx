@@ -2,8 +2,14 @@ import { useRef, type RefObject } from "react";
 import { CheckCircleOutlined, PlusOutlined, StopOutlined } from "@ant-design/icons";
 import { ModalForm } from "@ant-design/pro-components";
 import { App, Button, Popconfirm, Space } from "antd";
-import { createStaffApi, deleteStaffApi, getStaffListApi, updateStaffApi } from "#api/staff";
-import type { Staff, StaffPayload } from "#api/types";
+import {
+  createStaffApi,
+  deleteStaffApi,
+  getStaffListApi,
+  updateStaffApi,
+  type Staff,
+  type StaffPayload,
+} from "#api/pro/staff";
 import { FormSelect, FormText } from "#components/form";
 import { PageContainer } from "#components/page-container";
 import {

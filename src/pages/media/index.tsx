@@ -1,6 +1,5 @@
 import { App, Card, Typography } from "antd";
-import { createProductApi } from "#api/products";
-import type { ProductPayload } from "#api/types";
+import { createProductApi, type ProductPayload } from "#api/media";
 import { FormDigit, FormItem, FormSelect, FormText, FormTextArea, ProForm } from "#components/form";
 import { PageContainer } from "#components/page-container";
 import { SortableUpload } from "#components/sortable-upload";

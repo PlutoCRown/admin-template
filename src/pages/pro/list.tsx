@@ -1,8 +1,7 @@
 import { ProList } from "@ant-design/pro-components";
 import { Tag } from "antd";
 import { useNavigate } from "react-router";
-import { getArticleListApi } from "#api/articles";
-import type { Article } from "#api/types";
+import { getArticleListApi, type Article } from "#api/pro/articles";
 import { PageContainer } from "#components/page-container";
 
 export function ProListPage() {

@@ -1,5 +1,7 @@
 import dayjs from "dayjs";
-import type { Article, MediaFile, Product, Staff, UserProfile } from "../src/api/types";
+import type { UserProfile } from "../src/api/login/types";
+import type { MediaFile, Product } from "../src/api/media/types";
+import type { Article, Staff } from "../src/api/pro/types";
 
 export const DEMO_ACCOUNTS = [
   { username: "admin", password: "admin123", label: "管理员" },
