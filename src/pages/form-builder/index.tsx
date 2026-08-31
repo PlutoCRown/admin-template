@@ -1,6 +1,7 @@
 import { useMemo } from "react";
-import { ExportOutlined, ReloadOutlined } from "@ant-design/icons";
-import { Alert, Button, Card, Empty, Form, Spin } from "antd";
+import { ExportOutlined, PlusOutlined, ReloadOutlined, SlidersOutlined } from "@ant-design/icons";
+import { ModalForm } from "@ant-design/pro-components";
+import { Alert, Button, Card, Empty, Space, Spin, Tag } from "antd";
 import {
   FormCascader,
   FormCheckbox,
@@ -22,7 +23,13 @@ import { PageContainer } from "#components/page-container";
 import { useFormBuilderHydration, useFormBuilderStore } from "#stores/form-builder";
 import { ExportModal } from "./export-modal";
 import { FieldEditorList } from "./field-editor-list";
-import { fieldTypeHasOptions, type FormBuilderField, type FormBuilderSettings } from "./schema";
+import {
+  fieldTypeHasAllowClear,
+  fieldTypeHasOptions,
+  getFieldAllowClear,
+  type FormBuilderField,
+  type FormBuilderSettings,
+} from "./schema";
 import "./form-builder.css";
 
 const REQUIRED_RULES = [{ required: true }];
@@ -53,6 +60,9 @@ function renderPreviewField(field: FormBuilderField) {
     width: field.width,
     block: field.block,
     rules,
+    ...(fieldTypeHasAllowClear(field.type)
+      ? { fieldProps: { allowClear: getFieldAllowClear(field) } }
+      : {}),
   };
 
   switch (field.type) {
@@ -153,25 +163,26 @@ function getSchemaWarnings(fields: FormBuilderField[]) {
   return warnings;
 }
 
-function EditorSettingsForm() {
+function EditorSettingsModal() {
   const epoch = useFormBuilderStore((state) => state.epoch);
   const layout = useFormBuilderStore((state) => state.settings.layout);
   const patchSettings = useFormBuilderStore((state) => state.patchSettings);
   const settings = useFormBuilderStore.getState().settings;
-  const [form] = Form.useForm<FormBuilderSettings>();
   const isVertical = layout === "vertical";
 
   return (
-    <ProForm<FormBuilderSettings>
+    <ModalForm<FormBuilderSettings>
       key={epoch}
-      size="small"
-      form={form}
-      submitter={false}
+      title="表单配置"
+      layout="vertical"
+      grid={false}
       colon={false}
       preserve={false}
-      labelWidth={6}
-      className="form-builder-editor-settings"
+      submitter={false}
+      className="ch-form ch-form-horizontal form-builder-settings-form"
       style={{ height: "auto", overflow: "visible" }}
+      trigger={<Button icon={<SlidersOutlined />} aria-label="表单配置" />}
+      modalProps={{ destroyOnHidden: true, width: 520 }}
       initialValues={{
         layout: settings.layout,
         labelAlign: settings.labelAlign,
@@ -187,7 +198,13 @@ function EditorSettingsForm() {
       }}
     >
       <FormSegmented name="layout" label="表单布局" options={LAYOUT_OPTIONS} />
-      <FormDigit name="labelWidth" label="默认标签宽度" min={0} max={16} placeholder="自动" />
+      <FormDigit
+        name="labelWidth"
+        label="默认标签宽度"
+        min={0}
+        max={16}
+        placeholder="自动"
+      />
       <FormSegmented
         name="labelAlign"
         label="标签对齐"
@@ -195,16 +212,33 @@ function EditorSettingsForm() {
         disabled={isVertical}
       />
       <FormSwitch name="colon" label="标签冒号" disabled={isVertical} />
-    </ProForm>
+    </ModalForm>
   );
 }
 
 function EditorCard() {
   const fields = useFormBuilderStore((state) => state.fields);
+  const addField = useFormBuilderStore((state) => state.addField);
   const warnings = useMemo(() => getSchemaWarnings(fields), [fields]);
 
   return (
-    <Card title="字段配置" extra={<EditorSettingsForm />} className="form-builder-editor-card">
+    <Card
+      title={
+        <Space size={8}>
+          <span>字段配置</span>
+          <Tag color="blue">{fields.length} 个字段</Tag>
+        </Space>
+      }
+      extra={
+        <Space size={4}>
+          <EditorSettingsModal />
+          <Button type="primary" icon={<PlusOutlined />} onClick={addField}>
+            新增字段
+          </Button>
+        </Space>
+      }
+      className="form-builder-editor-card"
+    >
       {warnings.length > 0 ? (
         <Alert
           type="warning"

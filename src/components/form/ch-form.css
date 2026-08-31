@@ -3,11 +3,23 @@
   --form-ch: 1em;
 }
 
+.ch-form-item {
+  --ch-label-width: var(--ch-default-label-width, max-content);
+  --ch-input-width: max-content;
+}
+
 .ch-form {
+  --ch-default-label-width: max-content;
   display: flex;
   flex-wrap: wrap;
+  /*
+   * 用 gap 替代 form-item 的 margin-bottom，避免同行控件因底部外边距无法垂直居中。
+   * 按 antd 默认字号 14px 换算：row 12/18/24px → em；column 随 size 按 12:18:24 比例缩放。
+   * size: small / middle(默认) / large
+   */
   column-gap: 1.5em;
-  align-items: flex-start;
+  row-gap: calc(18em / 14);
+  align-items: center;
   align-content: flex-start;
   width: 100%;
   height: 100%;
@@ -17,7 +29,18 @@
   box-sizing: border-box;
 }
 
-.ch-form-item {
+.ch-form.ant-form-small {
+  column-gap: 1em;
+  row-gap: calc(12em / 14);
+}
+
+.ch-form.ant-form-large {
+  column-gap: 2em;
+  row-gap: calc(24em / 14);
+}
+
+.ch-form .ch-form-item.ant-form-item {
+  margin-block-end: 0 !important;
   margin-inline-end: 0;
 }
 
@@ -198,5 +221,5 @@
 
 .ch-form .ant-pro-form-submitter {
   flex: 1 1 100%;
-  margin-block-start: 8px;
+  margin-block: 0;
 }

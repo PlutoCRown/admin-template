@@ -9,15 +9,8 @@ export interface ChWidthProps {
   block?: boolean;
 }
 
-export function chVar(count: number | undefined, fallback: string): string {
-  return count == null ? fallback : `calc(${count} * var(--form-ch))`;
-}
-
-function chLabelWidth(count: number | undefined): string {
-  if (count === 0) {
-    return "max-content";
-  }
-  return chVar(count, "var(--ch-default-label-width, max-content)");
+function chEm(count: number) {
+  return `calc(${count} * var(--form-ch))`;
 }
 
 export function chFormItemProps(
@@ -27,9 +20,13 @@ export function chFormItemProps(
   const isBlock = Boolean(options.block);
   const hasWidth = options.width != null;
   const chStyle = {
-    "--ch-label-width": chLabelWidth(options.labelWidth),
-    // 未指定 width 时按内容宽度，避免 switch/segmented 等被拉满
-    "--ch-input-width": hasWidth ? chVar(options.width, "100%") : "max-content",
+    ...(options.labelWidth != null
+      ? {
+          "--ch-label-width":
+            options.labelWidth === 0 ? "max-content" : chEm(options.labelWidth),
+        }
+      : {}),
+    ...(options.width != null ? { "--ch-input-width": chEm(options.width) } : {}),
   } as unknown as NonNullable<FormItemProps["style"]>;
   return {
     ...formItemProps,

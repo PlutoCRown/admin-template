@@ -41,8 +41,9 @@ export function ProForm<T extends Record<string, any> = Record<string, any>>(
   const chStyle = {
     width: "100%",
     height: "100%",
-    "--ch-default-label-width":
-      labelWidth == null || labelWidth === 0 ? "max-content" : `calc(${labelWidth} * 1em)`,
+    ...(labelWidth
+      ? { "--ch-default-label-width": `calc(${labelWidth} * var(--form-ch))` }
+      : {}),
     ...style,
   } as CSSProperties;
   return (

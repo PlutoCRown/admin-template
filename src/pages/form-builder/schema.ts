@@ -33,6 +33,8 @@ export interface FormBuilderField {
   width?: number;
   required: boolean;
   block: boolean;
+  /** antd 支持 allowClear 的类型可配；不支持的类型保持 undefined */
+  allowClear?: boolean;
   placeholder: string;
   options: string[];
 }
@@ -218,7 +220,7 @@ const defaultFields: FormBuilderField[] = [
     width: 8,
     required: false,
     block: false,
-    placeholder: "请输入年龄",
+    placeholder: "整数",
     options: [],
   },
   {
@@ -362,6 +364,9 @@ const PLACEHOLDER_HIDDEN_TYPES = new Set<FormBuilderFieldType>([
   "segmented",
 ]);
 
+/** antd 无 allowClear 的控件：Radio / Checkbox / Switch / Segmented */
+const ALLOW_CLEAR_HIDDEN_TYPES = PLACEHOLDER_HIDDEN_TYPES;
+
 const WIDTH_HIDDEN_TYPES = new Set<FormBuilderFieldType>([
   "radio",
   "checkbox",
@@ -406,6 +411,13 @@ function getDefaultWidth(type: FormBuilderFieldType): number | undefined {
   return getTypeDefinition(type).defaultWidth;
 }
 
+function getDefaultAllowClear(type: FormBuilderFieldType): boolean | undefined {
+  if (ALLOW_CLEAR_HIDDEN_TYPES.has(type)) {
+    return undefined;
+  }
+  return true;
+}
+
 export function createFormBuilderField(type: FormBuilderFieldType = "text"): FormBuilderField {
   fieldSequence += 1;
   const definition = getTypeDefinition(type);
@@ -417,6 +429,7 @@ export function createFormBuilderField(type: FormBuilderFieldType = "text"): For
     width: getDefaultWidth(type),
     required: false,
     block: definition.defaultBlock,
+    allowClear: getDefaultAllowClear(type),
     placeholder: getDefaultPlaceholder(type),
     options: hasOptions(type) ? ["选项一", "选项二"] : [],
   };
@@ -431,6 +444,7 @@ export function applyFieldTypeDefaults(
     type,
     width: getDefaultWidth(type),
     block: definition.defaultBlock,
+    allowClear: getDefaultAllowClear(type),
     placeholder: getDefaultPlaceholder(type),
     options: hasOptions(type) && field.options.length === 0 ? ["选项一", "选项二"] : field.options,
   };
@@ -444,8 +458,20 @@ export function fieldTypeHasPlaceholder(type: FormBuilderFieldType) {
   return !PLACEHOLDER_HIDDEN_TYPES.has(type);
 }
 
+export function fieldTypeHasAllowClear(type: FormBuilderFieldType) {
+  return !ALLOW_CLEAR_HIDDEN_TYPES.has(type);
+}
+
 export function fieldTypeHasWidth(type: FormBuilderFieldType) {
   return !WIDTH_HIDDEN_TYPES.has(type);
+}
+
+/** 支持清空的类型默认 true（兼容旧数据未写 allowClear） */
+export function getFieldAllowClear(field: FormBuilderField) {
+  if (!fieldTypeHasAllowClear(field.type)) {
+    return false;
+  }
+  return field.allowClear ?? true;
 }
 
 function getSafeName(field: FormBuilderField, index: number) {
@@ -504,6 +530,9 @@ function renderFieldCode(field: FormBuilderField, index: number) {
   }
   if (field.placeholder.trim() && fieldTypeHasPlaceholder(field.type)) {
     props.push(`placeholder=${JSON.stringify(field.placeholder.trim())}`);
+  }
+  if (fieldTypeHasAllowClear(field.type)) {
+    props.push(`fieldProps={{ allowClear: ${getFieldAllowClear(field)} }}`);
   }
   if (hasOptions(field.type)) {
     props.push(`options={${JSON.stringify(field.options)}}`);
@@ -566,9 +595,10 @@ export function generateFormSchema(fields: FormBuilderField[], settings: FormBui
   return JSON.stringify(
     {
       settings,
-      fields: fields.map(({ id: _id, width, ...field }) => ({
+      fields: fields.map(({ id: _id, width, allowClear, ...field }) => ({
         ...field,
         ...(fieldTypeHasWidth(field.type) && width != null ? { width } : {}),
+        ...(fieldTypeHasAllowClear(field.type) ? { allowClear: allowClear ?? true } : {}),
       })),
     },
     null,

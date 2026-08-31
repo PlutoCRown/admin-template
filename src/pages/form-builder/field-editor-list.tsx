@@ -1,4 +1,11 @@
-import { createContext, useContext, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  type ComponentProps,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import {
   CloseOutlined,
   HolderOutlined,
@@ -26,12 +33,13 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ProCard } from "@ant-design/pro-components";
-import { Button, Form, Input, Popconfirm, Tag } from "antd";
+import { Button, Form, Input, Popconfirm } from "antd";
 import { DragOverlaySurface } from "#components/drag-overlay-surface";
 import { FormDigit, FormSelect, FormSwitch, FormText, ProForm } from "#components/form";
 import { useFormBuilderStore } from "#stores/form-builder";
 import {
   FIELD_TYPE_OPTIONS,
+  fieldTypeHasAllowClear,
   fieldTypeHasOptions,
   fieldTypeHasPlaceholder,
   fieldTypeHasWidth,
@@ -53,6 +61,23 @@ interface SortableOptionItemProps {
   value: string;
   onChange: (value: string) => void;
   onRemove: () => void;
+}
+
+function DragHandleButton({
+  overlay,
+  className,
+  ...props
+}: { overlay?: boolean } & ComponentProps<typeof Button>) {
+  return (
+    <Button
+      type="text"
+      icon={<HolderOutlined />}
+      className={["form-builder-drag-handle", className].filter(Boolean).join(" ")}
+      tabIndex={overlay ? -1 : undefined}
+      aria-hidden={overlay || undefined}
+      {...props}
+    />
+  );
 }
 
 const DragHandleContext = createContext<ReactNode>(null);
@@ -148,16 +173,12 @@ function SortableOptionItem({ id, value, onChange, onRemove }: SortableOptionIte
         onChange={onChange}
         onRemove={onRemove}
         dragHandle={
-          <button
-            type="button"
+          <DragHandleButton
             ref={setActivatorNodeRef}
-            className="form-builder-drag-handle form-builder-option-drag-handle"
             aria-label="拖动调整选项顺序"
             {...attributes}
             {...listeners}
-          >
-            <HolderOutlined />
-          </button>
+          />
         }
       />
     </div>
@@ -259,16 +280,7 @@ function OptionEditorList({ options, onChange }: OptionEditorListProps) {
               value={activeValue}
               onChange={() => undefined}
               onRemove={() => undefined}
-              dragHandle={
-                <button
-                  type="button"
-                  className="form-builder-drag-handle form-builder-option-drag-handle"
-                  tabIndex={-1}
-                  aria-hidden="true"
-                >
-                  <HolderOutlined />
-                </button>
-              }
+              dragHandle={<DragHandleButton overlay />}
             />
           </DragOverlaySurface>
         ) : null}
@@ -278,11 +290,7 @@ function OptionEditorList({ options, onChange }: OptionEditorListProps) {
 }
 
 function OverlayDragHandle() {
-  return (
-    <button type="button" className="form-builder-drag-handle" tabIndex={-1} aria-hidden="true">
-      <HolderOutlined />
-    </button>
-  );
+  return <DragHandleButton overlay />;
 }
 
 function DragHandle() {
@@ -311,16 +319,12 @@ function SortableListItem({ id, children }: SortableListItemProps) {
     opacity: isDragging ? 0 : undefined,
   };
   const handle = (
-    <button
-      type="button"
+    <DragHandleButton
       ref={setActivatorNodeRef}
-      className="form-builder-drag-handle"
       aria-label="拖动调整顺序"
       {...attributes}
       {...listeners}
-    >
-      <HolderOutlined />
-    </button>
+    />
   );
 
   return (
@@ -374,6 +378,7 @@ function FieldEditorItem({ id }: { id: string }) {
           placeholder: field.placeholder,
           required: field.required,
           block: field.block,
+          allowClear: field.allowClear ?? true,
         }}
         onValuesChange={(changed) => {
           if (changed.type !== undefined) {
@@ -416,6 +421,9 @@ function FieldEditorItem({ id }: { id: string }) {
         ) : null}
         <FormSwitch name="required" label="必填" />
         <FormSwitch name="block" label="整行" />
+        {fieldTypeHasAllowClear(field.type) ? (
+          <FormSwitch name="allowClear" label="允许清空" />
+        ) : null}
       </ProForm>
       {fieldTypeHasOptions(field.type) ? (
         <OptionEditorList
@@ -429,7 +437,6 @@ function FieldEditorItem({ id }: { id: string }) {
 
 export function FieldEditorList() {
   const fields = useFormBuilderStore((state) => state.fields);
-  const addField = useFormBuilderStore((state) => state.addField);
   const moveField = useFormBuilderStore((state) => state.moveField);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overlayWidth, setOverlayWidth] = useState<number>();
@@ -471,22 +478,11 @@ export function FieldEditorList() {
     >
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
         <div className="form-builder-field-list">
-          <div className="form-builder-field-list-header">
-            <div className="form-builder-field-list-heading">
-              <div className="form-builder-field-list-title">字段列表</div>
-              <Tag color="blue">{fields.length} 个字段</Tag>
-            </div>
-            <Button type="primary" icon={<PlusOutlined />} onClick={addField}>
-              新增字段
-            </Button>
-          </div>
-          <div className="form-builder-field-list-body">
-            {ids.map((id) => (
-              <SortableListItem key={id} id={id}>
-                <FieldEditorItem id={id} />
-              </SortableListItem>
-            ))}
-          </div>
+          {ids.map((id) => (
+            <SortableListItem key={id} id={id}>
+              <FieldEditorItem id={id} />
+            </SortableListItem>
+          ))}
         </div>
       </SortableContext>
       <DragOverlay dropAnimation={dropAnimation}>
