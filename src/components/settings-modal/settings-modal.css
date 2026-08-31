@@ -5,7 +5,8 @@
 
 .settings-modal .ant-modal-container {
   padding: 0;
-  border-radius: 12px;
+  border: 1px solid var(--ant-color-border, rgb(0 0 0 / 15%));
+  border-radius: var(--ant-border-radius-lg, 16px);
   overflow: hidden;
   background: var(--ant-color-bg-container, #fff);
   box-shadow: 0 16px 48px rgb(0 0 0 / 18%);
@@ -47,7 +48,7 @@
   margin-block-end: 8px;
   padding: 8px 12px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--ant-border-radius, 10px);
   background: transparent;
   color: var(--ant-color-text-secondary, rgb(0 0 0 / 65%));
   font: inherit;
@@ -75,7 +76,7 @@
   width: 100%;
   padding: 8px 12px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--ant-border-radius, 10px);
   background: transparent;
   color: var(--ant-color-text, rgb(0 0 0 / 88%));
   font: inherit;

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { ExportOutlined, ReloadOutlined } from "@ant-design/icons";
-import { Alert, Button, Card, Empty, InputNumber, Segmented, Space, Tag } from "antd";
+import { Alert, Button, Card, Empty, Form, Spin } from "antd";
 import {
   FormCascader,
   FormCheckbox,
@@ -19,16 +19,10 @@ import {
   ProForm,
 } from "#components/form";
 import { PageContainer } from "#components/page-container";
+import { useFormBuilderHydration, useFormBuilderStore } from "#stores/form-builder";
 import { ExportModal } from "./export-modal";
 import { FieldEditorList } from "./field-editor-list";
-import {
-  getDefaultFormBuilderFields,
-  getDefaultFormBuilderSettings,
-  fieldTypeHasOptions,
-  type FormBuilderField,
-  type FormBuilderLayout,
-  type FormBuilderSettings,
-} from "./schema";
+import { fieldTypeHasOptions, type FormBuilderField, type FormBuilderSettings } from "./schema";
 import "./form-builder.css";
 
 const REQUIRED_RULES = [{ required: true }];
@@ -159,132 +153,149 @@ function getSchemaWarnings(fields: FormBuilderField[]) {
   return warnings;
 }
 
+function EditorSettingsForm() {
+  const epoch = useFormBuilderStore((state) => state.epoch);
+  const layout = useFormBuilderStore((state) => state.settings.layout);
+  const patchSettings = useFormBuilderStore((state) => state.patchSettings);
+  const settings = useFormBuilderStore.getState().settings;
+  const [form] = Form.useForm<FormBuilderSettings>();
+  const isVertical = layout === "vertical";
+
+  return (
+    <ProForm<FormBuilderSettings>
+      key={epoch}
+      size="small"
+      form={form}
+      submitter={false}
+      colon={false}
+      preserve={false}
+      labelWidth={6}
+      className="form-builder-editor-settings"
+      style={{ height: "auto", overflow: "visible" }}
+      initialValues={{
+        layout: settings.layout,
+        labelAlign: settings.labelAlign,
+        colon: settings.colon,
+        labelWidth: settings.labelWidth > 0 ? settings.labelWidth : undefined,
+      }}
+      onValuesChange={(changed) => {
+        const patch: Partial<FormBuilderSettings> = { ...changed };
+        if ("labelWidth" in changed) {
+          patch.labelWidth = changed.labelWidth ?? 0;
+        }
+        patchSettings(patch);
+      }}
+    >
+      <FormSegmented name="layout" label="表单布局" options={LAYOUT_OPTIONS} />
+      <FormDigit name="labelWidth" label="默认标签宽度" min={0} max={16} placeholder="自动" />
+      <FormSegmented
+        name="labelAlign"
+        label="标签对齐"
+        options={LABEL_ALIGN_OPTIONS}
+        disabled={isVertical}
+      />
+      <FormSwitch name="colon" label="标签冒号" disabled={isVertical} />
+    </ProForm>
+  );
+}
+
+function EditorCard() {
+  const fields = useFormBuilderStore((state) => state.fields);
+  const warnings = useMemo(() => getSchemaWarnings(fields), [fields]);
+
+  return (
+    <Card title="字段配置" extra={<EditorSettingsForm />} className="form-builder-editor-card">
+      {warnings.length > 0 ? (
+        <Alert
+          type="warning"
+          showIcon
+          message="Schema 需要完善"
+          description={warnings.join("；")}
+          className="form-builder-warning"
+        />
+      ) : null}
+      <FieldEditorList />
+    </Card>
+  );
+}
+
+function PreviewCard() {
+  const fields = useFormBuilderStore((state) => state.fields);
+  const settings = useFormBuilderStore((state) => state.settings);
+  const setExportOpen = useFormBuilderStore((state) => state.setExportOpen);
+  const previewFields = useMemo(() => fields.map(renderPreviewField), [fields]);
+
+  return (
+    <Card
+      title="实时预览"
+      extra={
+        <Button type="primary" icon={<ExportOutlined />} onClick={() => setExportOpen(true)}>
+          导出
+        </Button>
+      }
+      className="form-builder-preview-card"
+    >
+      {fields.length > 0 ? (
+        <ProForm
+          submitter={false}
+          layout={settings.layout}
+          labelWidth={settings.labelWidth || undefined}
+          labelAlign={settings.labelAlign}
+          colon={settings.colon}
+          className="form-builder-preview-form"
+        >
+          {previewFields}
+        </ProForm>
+      ) : (
+        <Empty description="请在左侧添加表单项" />
+      )}
+    </Card>
+  );
+}
+
+function ExportModalHost() {
+  const exportOpen = useFormBuilderStore((state) => state.exportOpen);
+  const fields = useFormBuilderStore((state) => state.fields);
+  const settings = useFormBuilderStore((state) => state.settings);
+  const setExportOpen = useFormBuilderStore((state) => state.setExportOpen);
+
+  if (!exportOpen) {
+    return null;
+  }
+
+  return (
+    <ExportModal open fields={fields} settings={settings} onClose={() => setExportOpen(false)} />
+  );
+}
+
 export function FormBuilderPage() {
-  const [fields, setFields] = useState<FormBuilderField[]>(getDefaultFormBuilderFields);
-  const [settings, setSettings] = useState<FormBuilderSettings>(getDefaultFormBuilderSettings);
-  const [exportOpen, setExportOpen] = useState(false);
-  const warnings = getSchemaWarnings(fields);
-  const previewFields = fields.map(renderPreviewField);
+  const hydrated = useFormBuilderHydration();
+  const reset = useFormBuilderStore((state) => state.reset);
 
-  const handleReset = () => {
-    setFields(getDefaultFormBuilderFields());
-    setSettings(getDefaultFormBuilderSettings());
-  };
-
-  const handleLayoutChange = (layout: string | number) => {
-    setSettings((current) => ({ ...current, layout: layout as FormBuilderLayout }));
-  };
-
-  const handleLabelWidthChange = (labelWidth: number | null) => {
-    setSettings((current) => ({ ...current, labelWidth: labelWidth ?? 0 }));
-  };
-
-  const handleLabelAlignChange = (labelAlign: string | number) => {
-    setSettings((current) => ({ ...current, labelAlign: labelAlign as "left" | "right" }));
-  };
-
-  const handleOpenExport = () => {
-    setExportOpen(true);
-  };
-
-  const handleCloseExport = () => {
-    setExportOpen(false);
-  };
-
-  const isVertical = settings.layout === "vertical";
-  const editorActions = (
-    <Space size="middle" wrap className="form-builder-editor-settings">
-      <label className="form-builder-setting-control">
-        <span>表单布局</span>
-        <Segmented options={LAYOUT_OPTIONS} value={settings.layout} onChange={handleLayoutChange} />
-      </label>
-      <label className="form-builder-setting-control">
-        <span>默认标签宽度</span>
-        <InputNumber
-          min={0}
-          max={16}
-          value={settings.labelWidth || null}
-          placeholder="自动"
-          onChange={handleLabelWidthChange}
-        />
-      </label>
-      <label
-        className={[
-          "form-builder-setting-control",
-          isVertical ? "form-builder-setting-control-disabled" : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        <span>标签对齐</span>
-        <Segmented
-          options={LABEL_ALIGN_OPTIONS}
-          value={settings.labelAlign}
-          disabled={isVertical}
-          onChange={handleLabelAlignChange}
-        />
-      </label>
-      <Button icon={<ReloadOutlined />} onClick={handleReset}>
-        恢复示例
-      </Button>
-    </Space>
-  );
-
-  const previewActions = (
-    <Button type="primary" icon={<ExportOutlined />} onClick={handleOpenExport}>
-      导出
-    </Button>
-  );
+  if (!hydrated) {
+    return (
+      <PageContainer title="表单生成器">
+        <div style={{ display: "grid", placeItems: "center", minHeight: 240 }}>
+          <Spin />
+        </div>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer
       title="表单生成器"
-      subTitle="配置字段 Schema，实时生成表单、前端代码和后端数据结构"
+      subTitle={
+        <Button icon={<ReloadOutlined />} onClick={reset}>
+          重置示例
+        </Button>
+      }
     >
       <div className="form-builder-layout">
-        <Card title="字段配置" extra={editorActions} className="form-builder-editor-card">
-          <div className="form-builder-summary">
-            <Space size={[4, 4]} wrap>
-              <Tag color="blue">{fields.length} 个字段</Tag>
-              <Tag>支持文本、数字、日期时间、级联、树选择、开关、分段和金额</Tag>
-              <Tag>拖动卡片左上角手柄调整顺序</Tag>
-            </Space>
-          </div>
-          {warnings.length > 0 ? (
-            <Alert
-              type="warning"
-              showIcon
-              message="Schema 需要完善"
-              description={warnings.join("；")}
-              className="form-builder-warning"
-            />
-          ) : null}
-          <FieldEditorList fields={fields} onChange={setFields} />
-        </Card>
-
-        <Card title="实时预览" extra={previewActions} className="form-builder-preview-card">
-          {fields.length > 0 ? (
-            <ProForm
-              submitter={false}
-              layout={settings.layout}
-              labelWidth={settings.labelWidth || undefined}
-              labelAlign={settings.labelAlign}
-              className="form-builder-preview-form"
-            >
-              {previewFields}
-            </ProForm>
-          ) : (
-            <Empty description="请在左侧添加表单项" />
-          )}
-        </Card>
+        <EditorCard />
+        <PreviewCard />
       </div>
-
-      <ExportModal
-        open={exportOpen}
-        fields={fields}
-        settings={settings}
-        onClose={handleCloseExport}
-      />
+      <ExportModalHost />
     </PageContainer>
   );
 }

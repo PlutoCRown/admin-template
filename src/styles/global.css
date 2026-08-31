@@ -9,3 +9,49 @@ body,
   scrollbar-color: #8888 transparent;
   scrollbar-width: thin;
 }
+
+/*
+ * 超椭圆圆角：配合 ConfigProvider 放大后的 borderRadius。
+ * 圆形 / 胶囊控件保持 round，避免 Avatar、Switch、圆形按钮被切成 squircle。
+ */
+@supports (corner-shape: squircle) {
+  *,
+  *::before,
+  *::after {
+    corner-shape: squircle;
+  }
+
+  /* 含后代伪元素（如 Switch 圆球在 .ant-switch-handle::before） */
+  :where(
+    .ant-avatar,
+    .ant-avatar *,
+    .ant-btn-circle,
+    .ant-btn-round,
+    .ant-switch,
+    .ant-switch *,
+    .ant-radio,
+    .ant-radio *,
+    .ant-badge-dot,
+    .ant-badge-count,
+    .ant-badge-status-dot,
+    .ant-slider-handle,
+    .ant-slider-handle *,
+    .ant-float-btn:not(.ant-float-btn-square),
+    .ant-progress-circle,
+    .ant-progress-circle *,
+    .ant-spin-dot-item,
+    .ant-skeleton-avatar,
+    .ant-skeleton-avatar *,
+    .ant-segmented-shape-round,
+    .ant-segmented-shape-round *,
+    .ant-image-preview-operations-operation,
+    .sortable-upload-remove
+  ) {
+    corner-shape: round;
+
+    &::before,
+    &::after {
+      corner-shape: round;
+    }
+  }
+}

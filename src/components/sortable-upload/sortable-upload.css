@@ -17,7 +17,7 @@
 .sortable-upload-add {
   width: 120px;
   height: 120px;
-  border-radius: 8px;
+  border-radius: var(--ant-border-radius, 10px);
   overflow: hidden;
   position: relative;
 }
@@ -30,7 +30,7 @@
 
 .sortable-upload-card.is-overlay {
   cursor: grabbing;
-  border-radius: 8px;
+  border-radius: var(--ant-border-radius, 10px);
   box-shadow: none;
   transition: box-shadow 180ms ease;
 }

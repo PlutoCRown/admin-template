@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  type ChangeEvent,
-  type CSSProperties,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, type CSSProperties, type ReactNode } from "react";
 import {
   CloseOutlined,
   HolderOutlined,
@@ -33,34 +26,17 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ProCard } from "@ant-design/pro-components";
-import { Button, Input, InputNumber, Popconfirm, Select, Switch } from "antd";
+import { Button, Form, Input, Popconfirm, Tag } from "antd";
 import { DragOverlaySurface } from "#components/drag-overlay-surface";
+import { FormDigit, FormSelect, FormSwitch, FormText, ProForm } from "#components/form";
+import { useFormBuilderStore } from "#stores/form-builder";
 import {
   FIELD_TYPE_OPTIONS,
-  applyFieldTypeDefaults,
-  createFormBuilderField,
   fieldTypeHasOptions,
   fieldTypeHasPlaceholder,
   fieldTypeHasWidth,
-  type FormBuilderField,
   type FormBuilderFieldType,
 } from "./schema";
-
-interface FieldEditorListProps {
-  fields: FormBuilderField[];
-  onChange: (fields: FormBuilderField[]) => void;
-}
-
-interface FieldEditorItemProps {
-  field: FormBuilderField;
-  onUpdate: (id: string, patch: Partial<FormBuilderField>) => void;
-  onRemove: (id: string) => void;
-}
-
-interface RemoveActionProps {
-  field: FormBuilderField;
-  onRemove: (id: string) => void;
-}
 
 interface OptionEditorListProps {
   options: string[];
@@ -356,123 +332,105 @@ function SortableListItem({ id, children }: SortableListItemProps) {
   );
 }
 
-function FieldEditorItem({ field, onUpdate, onRemove }: FieldEditorItemProps) {
-  const handleLabelChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onUpdate(field.id, { label: event.target.value });
-  };
-  const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onUpdate(field.id, { name: event.target.value });
-  };
-  const handleTypeChange = (type: FormBuilderFieldType) => {
-    onUpdate(field.id, applyFieldTypeDefaults(field, type));
-  };
-  const handleWidthChange = (width: number | null) => {
-    if (width !== null) {
-      onUpdate(field.id, { width });
-    }
-  };
-  const handleRequiredChange = (required: boolean) => {
-    onUpdate(field.id, { required });
-  };
-  const handleBlockChange = (block: boolean) => {
-    onUpdate(field.id, { block });
-  };
-  const handlePlaceholderChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onUpdate(field.id, { placeholder: event.target.value });
-  };
-  const handleOptionsChange = (options: string[]) => {
-    onUpdate(field.id, { options });
-  };
+function FieldEditorItem({ id }: { id: string }) {
+  const epoch = useFormBuilderStore((state) => state.epoch);
+  const field = useFormBuilderStore((state) => state.fields.find((item) => item.id === id));
+  const updateField = useFormBuilderStore((state) => state.updateField);
+  const changeFieldType = useFormBuilderStore((state) => state.changeFieldType);
+  const removeField = useFormBuilderStore((state) => state.removeField);
+  const [form] = Form.useForm();
+
+  if (!field) {
+    return null;
+  }
 
   return (
     <ProCard
       size="small"
-      type="inner"
       className="form-builder-field-card"
       title={<DragHandle />}
-      extra={<RemoveAction field={field} onRemove={onRemove} />}
+      extra={
+        <Popconfirm title="删除这个表单项？" onConfirm={() => removeField(id)}>
+          <Button danger type="text" icon={<CloseOutlined />} aria-label={`删除 ${field.label}`} />
+        </Popconfirm>
+      }
       headerBordered={false}
-      styles={{
-        header: { minHeight: 0, paddingBlock: 4, paddingInline: 8 },
-        body: { padding: "8px 12px 12px" },
-        title: { paddingInlineStart: 0, fontWeight: 400 },
-        extra: { paddingInlineEnd: 0 },
-      }}
     >
-      <div className="form-builder-field-grid">
-        <label className="form-builder-field-control">
-          <span>显示名称</span>
-          <Input value={field.label} onChange={handleLabelChange} placeholder="显示名称" />
-        </label>
-        <label className="form-builder-field-control">
-          <span>字段名</span>
-          <Input
-            className="form-builder-field-name-input"
-            value={field.name}
-            onChange={handleNameChange}
-            placeholder="fieldName"
-          />
-        </label>
-        <label className="form-builder-field-control">
-          <span>字段类型</span>
-          <Select
-            value={field.type}
-            options={FIELD_TYPE_OPTIONS}
-            onChange={handleTypeChange}
-            showSearch
-            optionFilterProp="label"
-          />
-        </label>
+      <ProForm
+        key={`${epoch}-${field.type}`}
+        form={form}
+        submitter={false}
+        colon={false}
+        preserve={false}
+        labelWidth={5}
+        size="middle"
+        layout="vertical"
+        style={{ height: "auto", overflow: "visible" }}
+        initialValues={{
+          label: field.label,
+          name: field.name,
+          type: field.type,
+          width: field.width,
+          placeholder: field.placeholder,
+          required: field.required,
+          block: field.block,
+        }}
+        onValuesChange={(changed) => {
+          if (changed.type !== undefined) {
+            changeFieldType(id, changed.type as FormBuilderFieldType);
+            return;
+          }
+          if ("width" in changed && changed.width == null) {
+            return;
+          }
+          updateField(id, changed);
+        }}
+      >
+        <FormText name="label" label="显示名称" width={10} placeholder="显示名称" />
+        <FormText
+          name="name"
+          label="字段名"
+          width={10}
+          placeholder="fieldName"
+          fieldProps={{ className: "form-builder-field-name-input" }}
+        />
+        <FormSelect
+          name="type"
+          label="字段类型"
+          width={9}
+          options={FIELD_TYPE_OPTIONS}
+          fieldProps={{ showSearch: true, optionFilterProp: "label" }}
+        />
         {fieldTypeHasWidth(field.type) ? (
-          <label className="form-builder-field-control form-builder-field-width-control">
-            <span>表单项宽度</span>
-            <InputNumber
-              min={1}
-              max={48}
-              value={field.width}
-              onChange={handleWidthChange}
-              disabled={field.block}
-            />
-          </label>
+          <FormDigit
+            name="width"
+            label="表单项宽度"
+            labelWidth={6}
+            min={1}
+            max={48}
+            disabled={field.block}
+          />
         ) : null}
         {fieldTypeHasPlaceholder(field.type) ? (
-          <label className="form-builder-field-control form-builder-field-placeholder-control">
-            <span>占位提示</span>
-            <Input
-              value={field.placeholder}
-              onChange={handlePlaceholderChange}
-              placeholder="请输入占位提示"
-            />
-          </label>
+          <FormText name="placeholder" label="占位提示" width={12} placeholder="请输入占位提示" />
         ) : null}
-        <label className="form-builder-field-switch">
-          <span>必填</span>
-          <Switch size="small" checked={field.required} onChange={handleRequiredChange} />
-        </label>
-        <label className="form-builder-field-switch">
-          <span>整行</span>
-          <Switch size="small" checked={field.block} onChange={handleBlockChange} />
-        </label>
-      </div>
+        <FormSwitch name="required" label="必填" />
+        <FormSwitch name="block" label="整行" />
+      </ProForm>
       {fieldTypeHasOptions(field.type) ? (
-        <OptionEditorList options={field.options} onChange={handleOptionsChange} />
+        <OptionEditorList
+          options={field.options}
+          onChange={(options) => updateField(id, { options })}
+        />
       ) : null}
     </ProCard>
   );
 }
 
-function RemoveAction({ field, onRemove }: RemoveActionProps) {
-  const handleRemove = () => {
-    onRemove(field.id);
-  };
-  return (
-    <Popconfirm title="删除这个表单项？" onConfirm={handleRemove}>
-      <Button danger type="text" icon={<CloseOutlined />} aria-label={`删除 ${field.label}`} />
-    </Popconfirm>
-  );
-}
-
-export function FieldEditorList({ fields, onChange }: FieldEditorListProps) {
+export function FieldEditorList() {
+  const fields = useFormBuilderStore((state) => state.fields);
+  const addField = useFormBuilderStore((state) => state.addField);
+  const moveField = useFormBuilderStore((state) => state.moveField);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overlayWidth, setOverlayWidth] = useState<number>();
   const sensors = useSensors(
@@ -481,17 +439,7 @@ export function FieldEditorList({ fields, onChange }: FieldEditorListProps) {
     }),
   );
   const ids = fields.map((field) => field.id);
-  const activeField = activeId ? fields.find((field) => field.id === activeId) : undefined;
 
-  const handleUpdate = (id: string, patch: Partial<FormBuilderField>) => {
-    onChange(fields.map((field) => (field.id === id ? { ...field, ...patch } : field)));
-  };
-  const handleRemove = (id: string) => {
-    onChange(fields.filter((field) => field.id !== id));
-  };
-  const handleAdd = () => {
-    onChange([...fields, createFormBuilderField()]);
-  };
   const handleDragStart = ({ active }: DragStartEvent) => {
     setActiveId(String(active.id));
     setOverlayWidth(active.rect.current.initial?.width);
@@ -509,7 +457,7 @@ export function FieldEditorList({ fields, onChange }: FieldEditorListProps) {
     const fromIndex = fields.findIndex((field) => field.id === active.id);
     const toIndex = fields.findIndex((field) => field.id === over.id);
     if (fromIndex >= 0 && toIndex >= 0) {
-      onChange(arrayMove(fields, fromIndex, toIndex));
+      moveField(fromIndex, toIndex);
     }
   };
 
@@ -524,32 +472,31 @@ export function FieldEditorList({ fields, onChange }: FieldEditorListProps) {
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
         <div className="form-builder-field-list">
           <div className="form-builder-field-list-header">
-            <div className="form-builder-field-list-title">字段列表</div>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+            <div className="form-builder-field-list-heading">
+              <div className="form-builder-field-list-title">字段列表</div>
+              <Tag color="blue">{fields.length} 个字段</Tag>
+            </div>
+            <Button type="primary" icon={<PlusOutlined />} onClick={addField}>
               新增字段
             </Button>
           </div>
           <div className="form-builder-field-list-body">
-            {fields.map((field) => (
-              <SortableListItem key={field.id} id={field.id}>
-                <FieldEditorItem field={field} onUpdate={handleUpdate} onRemove={handleRemove} />
+            {ids.map((id) => (
+              <SortableListItem key={id} id={id}>
+                <FieldEditorItem id={id} />
               </SortableListItem>
             ))}
           </div>
         </div>
       </SortableContext>
       <DragOverlay dropAnimation={dropAnimation}>
-        {activeField ? (
+        {activeId ? (
           <DragHandleContext.Provider value={<OverlayDragHandle />}>
             <DragOverlaySurface
               className="form-builder-sortable-overlay"
               style={{ width: overlayWidth }}
             >
-              <FieldEditorItem
-                field={activeField}
-                onUpdate={handleUpdate}
-                onRemove={handleRemove}
-              />
+              <FieldEditorItem id={activeId} />
             </DragOverlaySurface>
           </DragHandleContext.Provider>
         ) : null}

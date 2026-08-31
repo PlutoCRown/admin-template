@@ -20,6 +20,8 @@ export interface FormBuilderSettings {
   layout: FormBuilderLayout;
   labelWidth: number;
   labelAlign: "left" | "right";
+  /** 水平布局时是否显示 label 后的冒号；垂直布局无效 */
+  colon: boolean;
 }
 
 export interface FormBuilderField {
@@ -182,6 +184,7 @@ const defaultSettings: FormBuilderSettings = {
   layout: "horizontal",
   labelWidth: 6,
   labelAlign: "right",
+  colon: false,
 };
 
 const defaultFields: FormBuilderField[] = [
@@ -525,6 +528,7 @@ export function generateFormCode(fields: FormBuilderField[], settings: FormBuild
   }
   if (settings.layout !== "vertical") {
     formProps.push(`labelAlign=${JSON.stringify(settings.labelAlign)}`);
+    formProps.push(`colon={${settings.colon}}`);
   }
   formProps.push("onFinish={handleSubmit}");
 
