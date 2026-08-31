@@ -2,6 +2,7 @@ import { ProCard } from "@ant-design/pro-components";
 import { Descriptions, Space, Tag, Typography } from "antd";
 import { PageContainer } from "#components/page-container";
 import { useUserStore } from "#stores/user";
+import styles from "./dashboard.module.css";
 
 const stack = [
   ["构建", "Rsbuild 2"],
@@ -15,7 +16,7 @@ export function DashboardPage() {
 
   return (
     <PageContainer title="工作台">
-      <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+      <Space orientation="vertical" size="large" className={styles.stack}>
         <ProCard title="当前用户">
           <Descriptions column={2}>
             <Descriptions.Item label="姓名">{user?.nickname}</Descriptions.Item>
@@ -38,7 +39,7 @@ export function DashboardPage() {
               </Tag>
             ))}
           </Space>
-          <Typography.Paragraph style={{ marginTop: 16, marginBottom: 0 }} type="secondary">
+          <Typography.Paragraph className={styles.hint} type="secondary">
             左侧菜单里可以依次查看
             ProTable、ProForm、ProList、SchemaForm、ProDescriptions，以及带拖拽排序的上传表单。
           </Typography.Paragraph>

@@ -2,10 +2,11 @@ import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { LoginForm, ProFormText } from "@ant-design/pro-components";
 import { App, Spin, Typography } from "antd";
 import { Navigate, useNavigate } from "react-router";
-import { loginApi } from "#api/login";
+import { loginApi, type LoginPayload } from "#api/login";
 import { useStoreHydration } from "#hooks/use-store-hydration";
 import { DEMO_ACCOUNTS } from "#constants/demo";
 import { useUserStore } from "#stores/user";
+import styles from "./login.module.css";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -14,11 +15,24 @@ export function LoginPage() {
   const setAuth = useUserStore((state) => state.setAuth);
   const hydrated = useStoreHydration();
 
+  const handleFinish = async (values: LoginPayload) => {
+    try {
+      const result = await loginApi({
+        username: values.username,
+        password: values.password,
+      });
+      setAuth(result.token, result.user);
+      message.success(`欢迎回来，${result.user.nickname}`);
+      void navigate("/dashboard", { replace: true });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   if (!hydrated) {
     return (
-      <div
-        style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}
-      >
+      <div className={styles.loading}>
         <Spin />
       </div>
     );
@@ -29,31 +43,11 @@ export function LoginPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
+    <div className={styles.page}>
       <LoginForm
         title="Admin Template"
         subTitle="React 19 + Antd 6 的中后台模板"
-        onFinish={async (values) => {
-          try {
-            const result = await loginApi({
-              username: values.username,
-              password: values.password,
-            });
-            setAuth(result.token, result.user);
-            message.success(`欢迎回来，${result.user.nickname}`);
-            void navigate("/dashboard", { replace: true });
-            return true;
-          } catch {
-            return false;
-          }
-        }}
+        onFinish={handleFinish}
       >
         <ProFormText
           name="username"

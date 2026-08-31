@@ -4,7 +4,6 @@ import { FullScreenModal } from "#components/full-screen-modal";
 import { AccountPanel } from "./account-panel";
 import { AppearancePanel } from "./appearance-panel";
 import { MenuPanel } from "./menu-panel";
-import "./settings.css";
 
 export type SettingsSection = "appearance" | "menu" | "account";
 

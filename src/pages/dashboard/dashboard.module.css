@@ -1,0 +1,8 @@
+.stack {
+  width: 100%;
+}
+
+.hint:global(.ant-typography) {
+  margin-top: 16px;
+  margin-bottom: 0;
+}

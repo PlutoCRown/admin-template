@@ -3,6 +3,8 @@ import { App, Button, Popconfirm, Typography } from "antd";
 import { menuRoute } from "#router/menu";
 import { useGlobalConfigStore } from "#stores/global-config";
 import { MenuEditor } from "./menu-editor";
+import menuStyles from "./menu-editor.module.css";
+import styles from "./settings.module.css";
 
 export function MenuPanel() {
   const { message } = App.useApp();
@@ -16,11 +18,11 @@ export function MenuPanel() {
   };
 
   return (
-    <div className="settings-modal-panel">
-      <div className="settings-modal-panel-header">
+    <div className={styles.panel}>
+      <div className={styles.panelHeader}>
         <div>
-          <h2 className="settings-modal-panel-title">侧边菜单</h2>
-          <p className="settings-modal-panel-desc">
+          <h2 className={styles.panelTitle}>侧边菜单</h2>
+          <p className={styles.panelDesc}>
             拖动把手调整同级菜单顺序，使用开关控制是否显示。修改会立即生效并保存在当前浏览器。
           </p>
         </div>
@@ -34,13 +36,13 @@ export function MenuPanel() {
           <Button icon={<RedoOutlined />}>重置</Button>
         </Popconfirm>
       </div>
-      <div className="settings-modal-section settings-menu-section">
-        <div className="settings-menu-list-heading">
+      <div className={`${styles.section} ${menuStyles.section}`}>
+        <div className={menuStyles.listHeading}>
           <span>菜单项</span>
           <span>显示</span>
         </div>
         <MenuEditor root={menuRoute} order={order} hiddenPaths={hiddenPaths} />
-        <Typography.Text type="secondary" className="settings-menu-tip">
+        <Typography.Text type="secondary" className={menuStyles.tip}>
           关闭菜单组会隐藏整组；再次打开时，组内菜单原有的排序与显示设置仍会保留。
         </Typography.Text>
       </div>

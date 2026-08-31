@@ -7,23 +7,23 @@ import { SortableUpload } from "#components/sortable-upload";
 export function MediaFormPage() {
   const { message } = App.useApp();
 
+  const handleFinish = async (values: ProductPayload) => {
+    try {
+      const product = await createProductApi(values);
+      message.success(`已保存商品 ${product.name}，共 ${product.gallery.length} 张图`);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   return (
     <PageContainer title="上传 / 预览 / 拖拽排序">
       <Card>
         <Typography.Paragraph type="secondary">
           图册支持本地上传、点击图片预览、拖动排序。缩略图右上角圆形按钮可删除，拖动时保持原样式。
         </Typography.Paragraph>
-        <ProForm<ProductPayload>
-          onFinish={async (values) => {
-            try {
-              const product = await createProductApi(values);
-              message.success(`已保存商品 ${product.name}，共 ${product.gallery.length} 张图`);
-              return true;
-            } catch {
-              return false;
-            }
-          }}
-        >
+        <ProForm<ProductPayload> onFinish={handleFinish}>
           <FormText name="name" label="商品名称" width={16} rules={[{ required: true }]} />
           <FormDigit
             name="price"

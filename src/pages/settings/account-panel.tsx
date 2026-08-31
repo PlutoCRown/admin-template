@@ -4,6 +4,7 @@ import { App, Avatar, Button, Descriptions, Space, Typography } from "antd";
 import { useNavigate } from "react-router";
 import { logoutApi } from "#api/login";
 import { useUserStore } from "#stores/user";
+import styles from "./settings.module.css";
 
 interface AccountPanelProps {
   onLoggedOut: () => void;
@@ -30,14 +31,14 @@ export function AccountPanel({ onLoggedOut }: AccountPanelProps) {
   };
 
   return (
-    <div className="settings-modal-panel">
-      <h2 className="settings-modal-panel-title">账号</h2>
-      <p className="settings-modal-panel-desc">查看当前登录账号信息，或退出登录。</p>
-      <div className="settings-modal-section">
+    <div className={styles.panel}>
+      <h2 className={styles.panelTitle}>账号</h2>
+      <p className={styles.panelDesc}>查看当前登录账号信息，或退出登录。</p>
+      <div className={styles.section}>
         <Space size={16} align="start">
           <Avatar size={64} src={user?.avatar || undefined} icon={<UserOutlined />} />
           <div>
-            <Typography.Title level={4} style={{ margin: 0 }}>
+            <Typography.Title level={4} className={styles.nickname}>
               {user?.nickname || "未命名用户"}
             </Typography.Title>
             <Typography.Text type="secondary">{user?.username}</Typography.Text>
@@ -51,14 +52,12 @@ export function AccountPanel({ onLoggedOut }: AccountPanelProps) {
           <Descriptions.Item label="邮箱">{user?.email || "-"}</Descriptions.Item>
           <Descriptions.Item label="手机">{user?.phone || "-"}</Descriptions.Item>
         </Descriptions>
-        <div className="settings-modal-account-actions">
+        <div className={styles.accountActions}>
           <Button
             danger
             icon={<LogoutOutlined />}
             loading={loggingOut}
-            onClick={() => {
-              void handleLogout();
-            }}
+            onClick={() => void handleLogout()}
           >
             退出登录
           </Button>

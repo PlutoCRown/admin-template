@@ -23,7 +23,7 @@
 | 构建            | Vite Plus（`vp`）                       |
 | 状态            | Zustand + Immer（含 persist）           |
 | 拖拽            | dnd-kit                                 |
-| Mock            | Elysia（`mock-server`）                 |
+| Mock            | Elysia（`mock`）                        |
 | 其它            | dayjs、es-toolkit、shiki（代码高亮）    |
 
 路径别名：`#*` → `./src/*`（例如 `#components/form`）。
@@ -78,7 +78,7 @@ bun run fmt        # 格式化
 
 ```text
 admin-template/
-├── mock-server/          # Elysia Mock API
+├── mock/          # Elysia Mock API
 ├── src/
 │   ├── api/              # base 请求封装 + 按 pages 镜像的接口
 │   ├── components/       # 通用组件（form、pro-table、sortable-upload…）

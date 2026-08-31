@@ -1,16 +1,14 @@
-import { useId, useState, type ComponentProps, type ReactNode } from "react";
-import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import { useId, useState } from "react";
+import { PlusOutlined } from "@ant-design/icons";
 import { arrayMove } from "@dnd-kit/sortable";
-import { ProForm as AntProForm, type ProFormItemProps } from "@ant-design/pro-components";
-import { Button, Input } from "antd";
+import { Button } from "antd";
 import {
   SortableHandleButton,
-  SortableItem,
   SortableList,
-  preventLayoutAnimationAfterSorting,
   type SortableMoveEvent,
 } from "#components/sortable-list";
-import { chFormItemProps, type ChWidthProps } from "./ch";
+import { SortableTextListRow } from "./sortable-text-list-row";
+import { TextListRow } from "./text-list-row";
 import "./text-list.css";
 
 export interface TextListProps {
@@ -71,69 +69,6 @@ function resolveCreatorValue(creatorValue: TextListProps["creatorValue"], list: 
     return creatorValue(list);
   }
   return creatorValue ?? "";
-}
-
-function TextListRow({
-  value,
-  dragHandle,
-  placeholder,
-  removable,
-  disabled,
-  onChange,
-  onRemove,
-}: {
-  value: string;
-  dragHandle?: ReactNode;
-  placeholder?: string;
-  removable: boolean;
-  disabled?: boolean;
-  onChange: (value: string) => void;
-  onRemove: () => void;
-}) {
-  return (
-    <div className="ch-text-list-item">
-      {dragHandle}
-      <Input
-        value={value}
-        disabled={disabled}
-        placeholder={placeholder}
-        onChange={(event) => onChange(event.target.value)}
-      />
-      {removable ? (
-        <Button
-          type="text"
-          icon={<MinusCircleOutlined />}
-          disabled={disabled}
-          aria-label={`删除 ${value || "该项"}`}
-          onClick={onRemove}
-        />
-      ) : null}
-    </div>
-  );
-}
-
-function SortableTextListRow({
-  id,
-  ...rowProps
-}: { id: string } & ComponentProps<typeof TextListRow>) {
-  return (
-    <SortableItem
-      id={id}
-      className="ch-text-list-row"
-      animateLayoutChanges={preventLayoutAnimationAfterSorting}
-    >
-      <TextListRow
-        {...rowProps}
-        dragHandle={
-          <SortableHandleButton
-            className="ch-text-list-drag-handle"
-            disabled={rowProps.disabled}
-            aria-label="拖动调整顺序"
-          />
-        }
-      />
-    </SortableItem>
-  );
 }
 
 function noop() {}
@@ -264,40 +199,5 @@ export function TextList({
     >
       {list}
     </SortableList>
-  );
-}
-
-export type FormTextListProps = Omit<ProFormItemProps, "placeholder"> &
-  ChWidthProps &
-  Omit<TextListProps, "value" | "onChange">;
-
-export function FormTextList({
-  width,
-  labelWidth,
-  block = true,
-  placeholder,
-  sortable,
-  creator,
-  creatorText,
-  creatorValue,
-  removable,
-  disabled,
-  className,
-  style,
-  ...rest
-}: FormTextListProps) {
-  const ch = chFormItemProps({ width, labelWidth, block }, { className, style });
-  return (
-    <AntProForm.Item {...rest} {...ch}>
-      <TextList
-        placeholder={placeholder}
-        sortable={sortable}
-        creator={creator}
-        creatorText={creatorText}
-        creatorValue={creatorValue}
-        removable={removable}
-        disabled={disabled}
-      />
-    </AntProForm.Item>
   );
 }

@@ -1,65 +1,73 @@
-.settings-modal-panel {
+.panel {
   box-sizing: border-box;
   padding: 28px 36px;
 }
 
-.settings-modal-panel-title {
+.panelTitle {
   margin: 0 0 4px;
   font-size: 22px;
   font-weight: 600;
   line-height: 30px;
 }
 
-.settings-modal-panel-desc {
+.panelDesc {
   margin: 0 0 28px;
   color: var(--ant-color-text-secondary, #8c8c8c);
   font-size: 14px;
   line-height: 22px;
 }
 
-.settings-modal-panel-header {
+.panelHeader {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
 }
 
-.settings-modal-panel-header > div {
+.panelHeader > div {
   min-width: 0;
 }
 
-.settings-modal-section {
+.section {
   display: flex;
   flex-direction: column;
   gap: 12px;
   max-width: 640px;
 }
 
-.settings-modal-section-label {
+.sectionLabel {
   color: var(--ant-color-text, rgb(0 0 0 / 88%));
   font-size: 14px;
   font-weight: 500;
   line-height: 22px;
 }
 
-.settings-modal-account-actions {
+.themeControl {
+  align-self: flex-start;
+}
+
+.nickname:global(.ant-typography) {
+  margin: 0;
+}
+
+.accountActions {
   display: flex;
   justify-content: flex-start;
   padding-top: 8px;
 }
 
 @media (width <= 768px) {
-  .settings-modal-panel {
+  .panel {
     padding: 20px;
   }
 
-  .settings-modal-panel-header {
+  .panelHeader {
     flex-direction: column;
     gap: 0;
   }
 
-  .settings-modal-panel-header > .ant-btn,
-  .settings-modal-panel-header > .ant-popover-open {
+  .panelHeader > :global(.ant-btn),
+  .panelHeader > :global(.ant-popover-open) {
     margin-bottom: 16px;
   }
 }

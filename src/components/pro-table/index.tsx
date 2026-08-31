@@ -5,10 +5,10 @@ import {
   type ProColumns as AntProColumns,
   type ProTableProps as AntProTableProps,
 } from "@ant-design/pro-components";
-import { TagSelect, type TagSelectValue, type TagSelectValueEnum } from "./tag-select";
 import "./pro-table.css";
 
 export type { ActionType } from "@ant-design/pro-components";
+export { TagSelect } from "./tag-select";
 export type { TagSelectValue, TagSelectValueConfig, TagSelectValueEnum } from "./tag-select";
 
 export type ProTableAction<T> = ActionType & {
@@ -16,25 +16,12 @@ export type ProTableAction<T> = ActionType & {
   setDataSource: (data: T[]) => void;
 };
 
-export interface TagSelectRenderer<DataSource, Value extends TagSelectValue = TagSelectValue> {
-  type: "tagSelect";
-  onChange: (value: Value, nextRecord: DataSource) => Promise<DataSource | void>;
-  onSuccess?: (record: DataSource) => void;
-  onError?: (error: unknown, record: DataSource) => void;
-  disabled?: boolean | ((record: DataSource) => boolean);
-}
-
-type ProTableValueEnum<DataSource> =
-  | TagSelectValueEnum
-  | ((record: DataSource) => TagSelectValueEnum);
-
 export type ProColumns<DataSource = unknown, ValueType = "text"> = Omit<
   AntProColumns<DataSource, ValueType>,
-  "children" | "valueEnum"
+  "children"
 > & {
-  valueEnum?: ProTableValueEnum<DataSource>;
-  renderer?: TagSelectRenderer<DataSource, any>;
   children?: ProColumns<DataSource>[];
+  wrap?: boolean;
 };
 
 type ProTableProps<
@@ -46,75 +33,17 @@ type ProTableProps<
 };
 
 const PRO_TABLE_CLASS_NAME = "admin-pro-table";
+const CELL_WRAP_CLASS_NAME = "admin-pro-table-cell-wrap";
 
 function getTableClassName(className?: string) {
   return className ? `${PRO_TABLE_CLASS_NAME} ${className}` : PRO_TABLE_CLASS_NAME;
 }
 
-export function tagSelectRenderer<DataSource, Value extends TagSelectValue>(
-  options: Omit<TagSelectRenderer<DataSource, Value>, "type">,
-): TagSelectRenderer<DataSource, Value> {
-  return { type: "tagSelect", ...options };
-}
-
-function getDataIndexPath(dataIndex: unknown) {
-  if (Array.isArray(dataIndex)) {
-    return dataIndex;
-  }
-  return dataIndex === undefined || dataIndex === null ? [] : [dataIndex];
-}
-
-function getRecordValue(record: Record<string, any>, dataIndex: unknown): unknown {
-  return getDataIndexPath(dataIndex).reduce<unknown>((current, key) => {
-    if (!current || typeof current !== "object") {
-      return undefined;
-    }
-    return (current as Record<PropertyKey, unknown>)[key as PropertyKey];
-  }, record);
-}
-
-function setRecordValue<DataSource extends Record<string, any>>(
-  record: DataSource,
-  dataIndex: unknown,
-  value: TagSelectValue,
-): DataSource {
-  const path = getDataIndexPath(dataIndex);
-  if (path.length === 0) {
-    return record;
-  }
-
-  const nextRecord = { ...record };
-  let source: Record<PropertyKey, any> = record;
-  let target: Record<PropertyKey, any> = nextRecord;
-
-  path.forEach((key, index) => {
-    const property = key as PropertyKey;
-    if (index === path.length - 1) {
-      target[property] = value;
-      return;
-    }
-    const sourceChild = source[property];
-    const targetChild = Array.isArray(sourceChild) ? [...sourceChild] : { ...sourceChild };
-    target[property] = targetChild;
-    source = sourceChild ?? {};
-    target = targetChild;
-  });
-
-  return nextRecord;
-}
-
-function getRowIdentity<DataSource extends Record<string, any>>(
-  record: DataSource,
-  index: number,
-  rowKey: AntProTableProps<DataSource, any, any>["rowKey"],
-) {
-  if (typeof rowKey === "function") {
-    return rowKey(record, index);
-  }
-  if (rowKey !== undefined) {
-    return record[rowKey as keyof DataSource];
-  }
-  return undefined;
+function appendClassName(origin: { className?: string } | undefined, className: string) {
+  return {
+    ...origin,
+    className: origin?.className ? `${origin.className} ${className}` : className,
+  };
 }
 
 export function ProTable<
@@ -132,6 +61,8 @@ export function ProTable<
     tableClassName,
     columns,
     rowKey,
+    scroll,
+    tableLayout,
     ...rest
   } = props;
   const innerRef = useRef<ActionType | undefined>(undefined);
@@ -192,96 +123,25 @@ export function ProTable<
       }
     : undefined;
 
-  const handleTagSelectChange = async (
-    nextValue: TagSelectValue,
-    record: DataSource,
-    rowIndex: number,
-    dataIndex: unknown,
-    renderer: TagSelectRenderer<DataSource>,
-  ) => {
-    const currentRows = overlayRef.current ?? rowsRef.current;
-    const previousValue = getRecordValue(record, dataIndex) as TagSelectValue;
-    const nextRecord = setRecordValue(record, dataIndex, nextValue);
-    const identity = getRowIdentity(record, rowIndex, rowKey);
-    const isTarget = (item: DataSource, index: number) =>
-      identity === undefined
-        ? item === record || index === rowIndex
-        : Object.is(getRowIdentity(item, index, rowKey), identity);
-
-    setCurrentDataSource(
-      currentRows.map((item, index) => (isTarget(item, index) ? nextRecord : item)),
-    );
-
-    let savedRecord: DataSource | void;
-    try {
-      savedRecord = await renderer.onChange(nextValue, nextRecord);
-    } catch (error) {
-      const latestRows = overlayRef.current ?? rowsRef.current;
-      setCurrentDataSource(
-        latestRows.map((item, index) => {
-          if (!isTarget(item, index) || !Object.is(getRecordValue(item, dataIndex), nextValue)) {
-            return item;
-          }
-          return setRecordValue(item, dataIndex, previousValue);
-        }),
-      );
-      renderer.onError?.(error, record);
-      return;
-    }
-
-    if (savedRecord) {
-      const latestRows = overlayRef.current ?? rowsRef.current;
-      setCurrentDataSource(
-        latestRows.map((item, index) => (isTarget(item, index) ? savedRecord : item)),
-      );
-    }
-    renderer.onSuccess?.(savedRecord ?? nextRecord);
-  };
-
   const renderColumn = (column: ProColumns<DataSource, any>): AntProColumns<DataSource, any> => {
-    const { renderer, children, ...columnProps } = column;
+    const { children, wrap, ...columnProps } = column;
     const renderedChildren = children?.map(renderColumn);
-    if (!renderer || renderer.type !== "tagSelect") {
-      return { ...columnProps, children: renderedChildren };
+    if (wrap) {
+      const { onCell, onHeaderCell } = columnProps;
+      columnProps.onCell = (record, index) =>
+        appendClassName(onCell?.(record, index), CELL_WRAP_CLASS_NAME);
+      columnProps.onHeaderCell = (item) =>
+        appendClassName(onHeaderCell?.(item), CELL_WRAP_CLASS_NAME);
     }
-
-    const renderTagSelect: NonNullable<AntProColumns<DataSource, any>["render"]> = (
-      dom,
-      record,
-      rowIndex,
-    ) => {
-      const currentValue = getRecordValue(record, column.dataIndex);
-      if (
-        typeof currentValue !== "string" &&
-        typeof currentValue !== "number" &&
-        typeof currentValue !== "boolean"
-      ) {
-        return dom;
-      }
-      const valueEnum =
-        typeof column.valueEnum === "function" ? column.valueEnum(record) : column.valueEnum;
-      const handleChange = (nextValue: TagSelectValue) =>
-        handleTagSelectChange(nextValue, record, rowIndex, column.dataIndex, renderer);
-      const disabled =
-        typeof renderer.disabled === "function" ? renderer.disabled(record) : renderer.disabled;
-      return (
-        <TagSelect
-          value={currentValue}
-          valueEnum={valueEnum}
-          disabled={disabled}
-          onChange={handleChange}
-        />
-      );
-    };
-
-    return { ...columnProps, children: renderedChildren, render: renderTagSelect };
+    return { ...columnProps, children: renderedChildren };
   };
 
   const renderedColumns = columns?.map(renderColumn);
 
   return (
     <AntProTable<DataSource, Params, ValueType>
-      scroll={{ x: "100%", y: "100%" }}
+      scroll={{ x: "max-content", y: "100%", ...scroll }}
+      tableLayout={tableLayout ?? "auto"}
       {...rest}
       actionRef={innerRef}
       bordered={bordered}

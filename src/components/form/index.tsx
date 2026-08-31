@@ -24,7 +24,8 @@ export {
   FormTime,
   FormTreeSelect,
 } from "./fields";
-export { FormTextList, TextList } from "./text-list";
+export { FormTextList } from "./form-text-list";
+export { TextList } from "./text-list";
 
 export interface ChProFormProps<T extends Record<string, any>> extends ProFormProps<T> {
   /** 表单内所有未单独声明 labelWidth 的表单项默认标签宽度，单位为方块字符（1em）。不传或 0 时按文字自动撑开 */

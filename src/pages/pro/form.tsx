@@ -6,20 +6,22 @@ import { PageContainer } from "#components/page-container";
 export function ProFormPage() {
   const { message } = App.useApp();
 
+  const handleFinish = async (values: StaffPayload) => {
+    try {
+      await createStaffApi(values);
+      message.success("员工已创建");
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   return (
     <PageContainer title="ProForm">
       <Card>
         <ProForm<StaffPayload>
           submitter={{ searchConfig: { submitText: "提交" } }}
-          onFinish={async (values) => {
-            try {
-              await createStaffApi(values);
-              message.success("员工已创建");
-              return true;
-            } catch {
-              return false;
-            }
-          }}
+          onFinish={handleFinish}
         >
           <FormText
             name="name"

@@ -1,3 +1,11 @@
+.admin-pro-table .ant-table-cell {
+  white-space: nowrap;
+}
+
+.admin-pro-table .ant-table-cell-wrap {
+  white-space: normal;
+}
+
 .admin-pro-table
   :where(span):has(> span > .ant-typography > .ant-typography-actions > .ant-typography-copy) {
   gap: 6px;
@@ -26,22 +34,11 @@
 }
 
 .admin-pro-table-tag-select-value {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
   margin-inline-end: 0;
 }
 
 .admin-pro-table-tag-select-trigger:not(:disabled):hover .admin-pro-table-tag-select-value {
   filter: brightness(0.96);
-}
-
-.admin-pro-table-tag-select-trigger.is-loading .admin-pro-table-tag-select-value {
-  opacity: 0.72;
-}
-
-.admin-pro-table-tag-select-loading {
-  font-size: 10px;
 }
 
 .admin-pro-table-tag-select-menu-value {

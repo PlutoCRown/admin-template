@@ -4,6 +4,16 @@ import { useSearchParams } from "react-router";
 import { getArticleApi, getArticleListApi, type Article } from "#api/pro/articles";
 import { PageContainer } from "#components/page-container";
 
+async function requestArticle(id: string) {
+  try {
+    const data = await getArticleApi(id);
+    return { success: true, data };
+  } catch {
+    const list = await getArticleListApi({ page: 1, pageSize: 1 });
+    return { success: true, data: list.list[0] };
+  }
+}
+
 export function ProDescriptionsPage() {
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id") ?? "art_1";
@@ -14,15 +24,7 @@ export function ProDescriptionsPage() {
         <ProDescriptions<Article>
           column={2}
           title="内容详情"
-          request={async () => {
-            try {
-              const data = await getArticleApi(id);
-              return { success: true, data };
-            } catch {
-              const list = await getArticleListApi({ page: 1, pageSize: 1 });
-              return { success: true, data: list.list[0] };
-            }
-          }}
+          request={() => requestArticle(id)}
           columns={[
             { title: "标题", dataIndex: "title" },
             { title: "作者", dataIndex: "author" },

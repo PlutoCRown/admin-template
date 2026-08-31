@@ -77,6 +77,16 @@ const columns: ProFormColumnsType<StaffPayload>[] = [
 export function SchemaFormPage() {
   const { message } = App.useApp();
 
+  const handleFinish = async (values: StaffPayload) => {
+    try {
+      await createStaffApi(values);
+      message.success("已通过 Schema 创建员工");
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   return (
     <PageContainer title="SchemaForm">
       <Card>
@@ -88,15 +98,7 @@ export function SchemaFormPage() {
           wrapperCol={{ flex: "none" }}
           className="ch-form"
           columns={columns}
-          onFinish={async (values) => {
-            try {
-              await createStaffApi(values);
-              message.success("已通过 Schema 创建员工");
-              return true;
-            } catch {
-              return false;
-            }
-          }}
+          onFinish={handleFinish}
         />
       </Card>
     </PageContainer>

@@ -1,11 +1,9 @@
 import { Elysia } from "elysia";
 import { ApiError, ErrorCode } from "./codes";
+import { MOCK_HOST, MOCK_PORT } from "./config";
 import { randomDelay } from "./delay";
 import { fail } from "./envelope";
 import { apiRoutes } from "./routes";
-
-export const MOCK_HOST = "127.0.0.1";
-export const MOCK_PORT = Number(process.env.MOCK_PORT || 3001);
 
 const app = new Elysia()
   .error({ ApiError })

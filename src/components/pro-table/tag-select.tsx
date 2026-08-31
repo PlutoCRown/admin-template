@@ -24,11 +24,11 @@ interface TagSelectOption {
   icon?: ReactNode;
 }
 
-interface TagSelectProps {
-  value: TagSelectValue;
+interface TagSelectProps<Value extends TagSelectValue = TagSelectValue> {
+  value: Value;
   valueEnum?: TagSelectValueEnum;
   disabled?: boolean;
-  onChange: (value: TagSelectValue) => Promise<void>;
+  onChange: (value: Value) => Promise<void>;
 }
 
 const DROPDOWN_TRIGGER: NonNullable<DropdownProps["trigger"]> = ["click"];
@@ -87,10 +87,6 @@ function isSameValue(left: TagSelectValue, right: TagSelectValue) {
   return Object.is(left, right);
 }
 
-function getTriggerClassName(loading: boolean) {
-  return `admin-pro-table-tag-select-trigger${loading ? " is-loading" : ""}`;
-}
-
 function getMenuItem(option: TagSelectOption, index: number) {
   return {
     key: String(index),
@@ -107,7 +103,12 @@ function getMenuItem(option: TagSelectOption, index: number) {
   };
 }
 
-export function TagSelect({ value, valueEnum, disabled = false, onChange }: TagSelectProps) {
+export function TagSelect<Value extends TagSelectValue = TagSelectValue>({
+  value,
+  valueEnum,
+  disabled = false,
+  onChange,
+}: TagSelectProps<Value>) {
   const [loading, setLoading] = useState(false);
   const options = getOptions(valueEnum, value);
   const selectedIndex = options.findIndex((option) => isSameValue(option.value, value));
@@ -121,7 +122,7 @@ export function TagSelect({ value, valueEnum, disabled = false, onChange }: TagS
     }
     setLoading(true);
     try {
-      await onChange(option.value);
+      await onChange(option.value as Value);
     } catch {
       setLoading(false);
       return;
@@ -137,14 +138,17 @@ export function TagSelect({ value, valueEnum, disabled = false, onChange }: TagS
 
   return (
     <Dropdown menu={menu} trigger={DROPDOWN_TRIGGER} disabled={disabled || loading}>
-      <button type="button" className={getTriggerClassName(loading)} disabled={disabled || loading}>
+      <button
+        type="button"
+        className="admin-pro-table-tag-select-trigger"
+        disabled={disabled || loading}
+      >
         <Tag
           color={selectedOption?.color}
-          icon={selectedOption?.icon}
+          icon={loading ? <LoadingOutlined spin /> : selectedOption?.icon}
           className="admin-pro-table-tag-select-value"
         >
-          <span>{selectedOption?.label ?? String(value)}</span>
-          {loading ? <LoadingOutlined spin className="admin-pro-table-tag-select-loading" /> : null}
+          {selectedOption?.label ?? String(value)}
         </Tag>
       </button>
     </Dropdown>

@@ -1,78 +1,18 @@
-import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from "react";
-import { CloseOutlined, PlusOutlined } from "@ant-design/icons";
+import { useEffect, useRef, useState } from "react";
+import { PlusOutlined } from "@ant-design/icons";
 import { arrayMove, rectSortingStrategy } from "@dnd-kit/sortable";
 import { App, Image, Upload, type UploadProps } from "antd";
 import { getErrorMessage } from "#api/base/client";
 import { uploadFileApi, type MediaFile } from "#api/media";
-import {
-  SortableItem,
-  SortableList,
-  useSortableItem,
-  type SortableMoveEvent,
-} from "#components/sortable-list";
+import { SortableItem, SortableList, type SortableMoveEvent } from "#components/sortable-list";
+import { FileCardPreview } from "./file-card-preview";
+import { SortableFileCard } from "./sortable-file-card";
 import "./sortable-upload.css";
 
 interface SortableUploadProps {
   value?: MediaFile[];
   onChange?: (value: MediaFile[]) => void;
   max?: number;
-}
-
-interface SortableFileCardProps {
-  file: MediaFile;
-  onPreview: (uid: string) => void;
-  onRemove: (uid: string) => void;
-}
-
-function handleRemovePointerDown(event: PointerEvent<HTMLButtonElement>) {
-  event.stopPropagation();
-}
-
-function FileCardPreview({ file }: { file: MediaFile }) {
-  return (
-    <div className="sortable-upload-item">
-      <img src={file.url} alt={file.name} />
-    </div>
-  );
-}
-
-function SortableFileCard({ file, onPreview, onRemove }: SortableFileCardProps) {
-  const draggedRef = useRef(false);
-  const { attributes, listeners, isDragging } = useSortableItem();
-
-  useEffect(() => {
-    if (isDragging) {
-      draggedRef.current = true;
-    }
-  }, [isDragging]);
-
-  const handlePreview = () => {
-    if (draggedRef.current) {
-      draggedRef.current = false;
-      return;
-    }
-    onPreview(file.uid);
-  };
-
-  const handleRemove = (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    onRemove(file.uid);
-  };
-
-  return (
-    <div className="sortable-upload-item" {...attributes} {...listeners} onClick={handlePreview}>
-      <img src={file.url} alt={file.name} />
-      <button
-        type="button"
-        className="sortable-upload-remove"
-        aria-label="删除"
-        onPointerDown={handleRemovePointerDown}
-        onClick={handleRemove}
-      >
-        <CloseOutlined />
-      </button>
-    </div>
-  );
 }
 
 export function SortableUpload({ value = [], onChange, max = 8 }: SortableUploadProps) {

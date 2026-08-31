@@ -1,9 +1,9 @@
-.settings-menu-section {
+.section {
   gap: 0;
   max-width: 720px;
 }
 
-.settings-menu-list-heading {
+.listHeading {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -13,18 +13,18 @@
   line-height: 20px;
 }
 
-.settings-menu-list {
+.list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.settings-menu-tree-item {
+.treeItem {
   position: relative;
   min-width: 0;
 }
 
-.settings-menu-item {
+.item {
   position: relative;
   display: flex;
   align-items: center;
@@ -35,96 +35,96 @@
   background: var(--ant-color-bg-container, #fff);
 }
 
-.settings-menu-tree-item-dragging > .settings-menu-item {
+.treeItemDragging > .item {
   border-color: var(--ant-color-primary-border, #91caff);
   box-shadow: 0 8px 24px rgb(0 0 0 / 10%);
 }
 
-.settings-menu-drag-overlay {
+.dragOverlay {
   cursor: grabbing;
   border-radius: var(--ant-border-radius, 10px);
   box-shadow: none;
   transition: box-shadow 180ms ease;
 }
 
-.settings-menu-drag-overlay.is-lifted {
+.dragOverlay:global(.is-lifted) {
   box-shadow: 0 12px 32px rgb(0 0 0 / 16%);
 }
 
-.settings-menu-drag-overlay .settings-menu-item {
+.dragOverlay .item {
   border-color: var(--ant-color-primary-border, #91caff);
 }
 
-.settings-menu-drag-handle {
+.dragHandle {
   flex: none;
   color: var(--ant-color-text-tertiary, rgb(0 0 0 / 45%));
   cursor: grab;
   touch-action: none;
 }
 
-.settings-menu-drag-handle:hover {
+.dragHandle:hover {
   color: var(--ant-color-primary, #1677ff) !important;
 }
 
-.settings-menu-drag-handle:active {
+.dragHandle:active {
   cursor: grabbing;
 }
 
-.settings-menu-collapse-button {
+.collapseButton {
   flex: none;
   color: var(--ant-color-text-secondary, rgb(0 0 0 / 65%));
 }
 
-.settings-menu-collapse-button:hover {
+.collapseButton:hover {
   color: var(--ant-color-primary, #1677ff) !important;
 }
 
-.settings-menu-item-icon {
+.itemIcon {
   display: inline-flex;
   flex: none;
   color: var(--ant-color-text-secondary, rgb(0 0 0 / 65%));
   font-size: 16px;
 }
 
-.settings-menu-item-main {
+.itemMain {
   flex: 1;
   min-width: 0;
 }
 
-.settings-menu-item-name,
-.settings-menu-item-path {
+.itemName,
+.itemPath {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.settings-menu-item-name {
+.itemName {
   color: var(--ant-color-text, rgb(0 0 0 / 88%));
   font-size: 14px;
   font-weight: 500;
   line-height: 22px;
 }
 
-.settings-menu-item-path {
+.itemPath {
   color: var(--ant-color-text-tertiary, rgb(0 0 0 / 45%));
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 11px;
   line-height: 18px;
 }
 
-.settings-menu-list-nested {
+.listNested {
   gap: 6px;
   margin: 6px 0 0 30px;
   padding-left: 14px;
   border-left: 1px solid var(--ant-color-border-secondary, rgb(0 0 0 / 6%));
 }
 
-.settings-menu-list-nested .settings-menu-item {
+.listNested .item {
   min-height: 48px;
   background: var(--ant-color-bg-layout, #fafafa);
 }
 
-.settings-menu-tip {
+.tip {
   margin-top: 12px;
   font-size: 12px;
 }
