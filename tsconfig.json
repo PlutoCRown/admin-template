@@ -19,5 +19,5 @@
       "#*": ["./src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "mock/auth.ts", "mock/codes.ts", "mock/data.ts", "mock/envelope.ts"]
 }

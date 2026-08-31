@@ -1,6 +1,7 @@
 import { lazy, Suspense, type ReactNode } from "react";
 import { createBrowserRouter, Navigate } from "react-router";
 import { BasicLayout } from "#layouts/BasicLayout";
+import { getRouterBasename } from "#utils/base-path";
 import { AuthGuard } from "./AuthGuard";
 import { RouteLoading } from "./RouteLoading";
 
@@ -39,33 +40,36 @@ function withRouteLoading(element: ReactNode, fullScreen = false) {
   return <Suspense fallback={<RouteLoading fullScreen={fullScreen} />}>{element}</Suspense>;
 }
 
-export const router = createBrowserRouter([
-  {
-    path: "/login",
-    element: withRouteLoading(<LoginPage />, true),
-  },
-  {
-    element: <AuthGuard />,
-    children: [
-      {
-        path: "/",
-        element: <BasicLayout />,
-        children: [
-          { index: true, element: <Navigate to="/dashboard" replace /> },
-          { path: "dashboard", element: withRouteLoading(<DashboardPage />) },
-          { path: "form-builder", element: withRouteLoading(<FormBuilderPage />) },
-          { path: "pro/table", element: withRouteLoading(<ProTablePage />) },
-          { path: "pro/form", element: withRouteLoading(<ProFormPage />) },
-          { path: "pro/list", element: withRouteLoading(<ProListPage />) },
-          { path: "pro/schema-form", element: withRouteLoading(<SchemaFormPage />) },
-          {
-            path: "pro/descriptions",
-            element: withRouteLoading(<ProDescriptionsPage />),
-          },
-          { path: "media", element: withRouteLoading(<MediaFormPage />) },
-          { path: "*", element: withRouteLoading(<NotFoundPage />) },
-        ],
-      },
-    ],
-  },
-]);
+export const router = createBrowserRouter(
+  [
+    {
+      path: "/login",
+      element: withRouteLoading(<LoginPage />, true),
+    },
+    {
+      element: <AuthGuard />,
+      children: [
+        {
+          path: "/",
+          element: <BasicLayout />,
+          children: [
+            { index: true, element: <Navigate to="/dashboard" replace /> },
+            { path: "dashboard", element: withRouteLoading(<DashboardPage />) },
+            { path: "form-builder", element: withRouteLoading(<FormBuilderPage />) },
+            { path: "pro/table", element: withRouteLoading(<ProTablePage />) },
+            { path: "pro/form", element: withRouteLoading(<ProFormPage />) },
+            { path: "pro/list", element: withRouteLoading(<ProListPage />) },
+            { path: "pro/schema-form", element: withRouteLoading(<SchemaFormPage />) },
+            {
+              path: "pro/descriptions",
+              element: withRouteLoading(<ProDescriptionsPage />),
+            },
+            { path: "media", element: withRouteLoading(<MediaFormPage />) },
+            { path: "*", element: withRouteLoading(<NotFoundPage />) },
+          ],
+        },
+      ],
+    },
+  ],
+  { basename: getRouterBasename() },
+);

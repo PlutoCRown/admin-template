@@ -1,0 +1,17 @@
+.ch-text-edit-popover-trigger {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: inherit;
+}
+
+.ch-text-edit-popover-trigger:disabled {
+  cursor: default;
+}
+
+.ch-text-edit-popover-panel .ant-input {
+  width: 12em;
+}

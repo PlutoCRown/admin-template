@@ -74,6 +74,27 @@ bun run lint       # Lint
 bun run fmt        # 格式化
 ```
 
+## GitHub Pages
+
+推送到 `main` 后，GitHub Actions 会构建并发布静态站点，地址为：
+
+`https://<user>.github.io/<repo>/`
+
+本仓库对应：<https://plutocrown.github.io/admin-template/>
+
+**第一次发布前**，到仓库 **Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**。之后每次推送会自动更新。
+
+GitHub Pages 没有独立后端。构建时会打进浏览器内 Mock（`VITE_STATIC_MOCK=true`），演示账号与本地相同；增删改只存在于当前会话，刷新页面后恢复。
+
+本地按 Pages 方式预览：
+
+```bash
+VITE_BASE_PATH=/admin-template/ VITE_STATIC_MOCK=true bun run build
+VITE_BASE_PATH=/admin-template/ bun run preview
+```
+
+然后打开终端提示的地址，并带上子路径（例如 `http://localhost:4173/admin-template/`）。
+
 ## 目录结构
 
 ```text

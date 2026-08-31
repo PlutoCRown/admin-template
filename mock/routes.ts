@@ -3,7 +3,7 @@ import type { ProductPayload } from "../src/api/media/types";
 import type { StaffPayload } from "../src/api/pro/types";
 import { bearerToken, issueToken, requireUser, revokeToken } from "./auth";
 import { ApiError, ErrorCode } from "./codes";
-import { articles, fileToMedia, passwords, products, staff, users } from "./data";
+import { articles, fileToMedia, getStaffAvatar, passwords, products, staff, users } from "./data";
 import { ok, paginate } from "./envelope";
 
 let staffSeq = staff.length;
@@ -61,10 +61,13 @@ const privateRoutes = new Elysia()
   })
   .post("/staff", ({ body }) => {
     staffSeq += 1;
+    const payload = body as StaffPayload;
     const item = {
-      ...(body as StaffPayload),
+      ...payload,
       id: `staff_${staffSeq}`,
+      avatar: getStaffAvatar(staffSeq, payload.name),
       createdAt: new Date().toISOString(),
+      salary: 120000,
     };
     staff.unshift(item);
     return ok(item);

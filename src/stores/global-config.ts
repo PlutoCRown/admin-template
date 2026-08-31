@@ -10,9 +10,17 @@ import {
 } from "#router/menu";
 
 export type ThemeMode = "light" | "dark" | "system";
+export type LargeNumberFormat = "none" | "western" | "chinese";
+export type DateFormat = "none" | "date" | "relative";
+
+interface DataDisplayConfig {
+  largeNumberFormat: LargeNumberFormat;
+  dateFormat: DateFormat;
+}
 
 export interface GlobalConfig {
   themeMode: ThemeMode;
+  dataDisplay: DataDisplayConfig;
   menu: {
     order: MenuOrder;
     hiddenPaths: string[];
@@ -21,6 +29,8 @@ export interface GlobalConfig {
 
 interface GlobalConfigState extends GlobalConfig {
   setThemeMode: (mode: ThemeMode) => void;
+  setLargeNumberFormat: (format: LargeNumberFormat) => void;
+  setDateFormat: (format: DateFormat) => void;
   setMenuItemVisible: (path: string, visible: boolean) => void;
   moveMenuItem: (parentPath: string, fromIndex: number, toIndex: number) => void;
   resetMenu: () => void;
@@ -41,6 +51,10 @@ function getMenuPaths(route: AppMenuRoute = menuRoute): Set<string> {
 function readLegacyState(): GlobalConfig {
   const fallback: GlobalConfig = {
     themeMode: "system",
+    dataDisplay: {
+      largeNumberFormat: "chinese",
+      dateFormat: "relative",
+    },
     menu: {
       order: getDefaultMenuOrder(),
       hiddenPaths: [],
@@ -59,6 +73,7 @@ function readLegacyState(): GlobalConfig {
     } | null;
     return {
       themeMode: oldTheme?.state?.mode ?? fallback.themeMode,
+      dataDisplay: fallback.dataDisplay,
       menu: {
         order: reconcileMenuOrder(oldMenu?.state?.order ?? fallback.menu.order),
         hiddenPaths: oldMenu?.state?.hiddenPaths ?? fallback.menu.hiddenPaths,
@@ -77,6 +92,16 @@ export const useGlobalConfigStore = create<GlobalConfigState>()(
       ...initialConfig,
       setThemeMode: (themeMode) => {
         set({ themeMode });
+      },
+      setLargeNumberFormat: (largeNumberFormat) => {
+        set((state) => {
+          state.dataDisplay.largeNumberFormat = largeNumberFormat;
+        });
+      },
+      setDateFormat: (dateFormat) => {
+        set((state) => {
+          state.dataDisplay.dateFormat = dateFormat;
+        });
       },
       setMenuItemVisible: (path, visible) => {
         set((state) => {
@@ -119,15 +144,32 @@ export const useGlobalConfigStore = create<GlobalConfigState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         themeMode: state.themeMode,
+        dataDisplay: state.dataDisplay,
         menu: state.menu,
       }),
       merge: (persisted, current) => {
-        const saved = persisted as Partial<GlobalConfig>;
+        const saved = persisted as Partial<GlobalConfig> & {
+          dataDisplay?: Partial<DataDisplayConfig> & {
+            formatLargeNumbers?: boolean;
+            formatTime?: boolean;
+          };
+        };
         const menuPaths = getMenuPaths();
         const savedMenu = saved.menu ?? current.menu;
+        const savedDataDisplay = saved.dataDisplay;
         return {
           ...current,
           themeMode: saved.themeMode ?? current.themeMode,
+          dataDisplay: {
+            largeNumberFormat:
+              savedDataDisplay?.largeNumberFormat ??
+              (savedDataDisplay?.formatLargeNumbers === false
+                ? "none"
+                : current.dataDisplay.largeNumberFormat),
+            dateFormat:
+              savedDataDisplay?.dateFormat ??
+              (savedDataDisplay?.formatTime === false ? "none" : current.dataDisplay.dateFormat),
+          },
           menu: {
             order: reconcileMenuOrder(savedMenu.order),
             hiddenPaths: savedMenu.hiddenPaths.filter((path) => menuPaths.has(path)),

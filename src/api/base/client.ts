@@ -1,4 +1,5 @@
 import { useUserStore } from "#stores/user";
+import { withBasePath } from "#utils/base-path";
 import { createHttp, isHttpError, type HttpRequestConfig, type HttpResponse } from "./http";
 import { notifyRequestError } from "./notify";
 import { BizError, type ApiEnvelope } from "./types";
@@ -6,6 +7,13 @@ import { BizError, type ApiEnvelope } from "./types";
 export const http = createHttp({
   baseURL: import.meta.env.VITE_API_BASE || "/api",
   timeout: 15_000,
+  adapter:
+    import.meta.env.VITE_STATIC_MOCK === "true"
+      ? async (config) => {
+          const { staticMockAdapter } = await import("./static-mock-adapter");
+          return staticMockAdapter(config);
+        }
+      : undefined,
 });
 
 http.interceptors.request.use((config) => {
@@ -26,8 +34,9 @@ http.interceptors.response.use(
       const isLoginRequest = (error.config.url ?? "").includes("/auth/login");
       if (error.status === 401 && !isLoginRequest) {
         useUserStore.getState().clearAuth();
-        if (!window.location.pathname.startsWith("/login")) {
-          window.location.assign("/login");
+        const loginPath = withBasePath("/login");
+        if (!window.location.pathname.startsWith(loginPath)) {
+          window.location.assign(loginPath);
         }
       }
       if (!error.config.skipErrorNotify && error.code !== "ERR_CANCELED") {

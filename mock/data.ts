@@ -8,9 +8,13 @@ export const DEMO_ACCOUNTS = [
   { username: "editor", password: "editor123", label: "编辑" },
 ] as const;
 
+function svgDataUri(svg: string) {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
 function svgCover(seed: string, title: string, from: string, to: string): string {
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="640" height="360">
+  return svgDataUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
       <defs>
         <linearGradient id="${seed}" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stop-color="${from}" />
@@ -20,8 +24,33 @@ function svgCover(seed: string, title: string, from: string, to: string): string
       <rect width="640" height="360" fill="url(#${seed})" />
       <text x="50%" y="50%" fill="white" font-size="36" font-family="sans-serif" text-anchor="middle" dy=".3em">${title}</text>
     </svg>
-  `;
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  `);
+}
+
+function svgAvatar(seed: string, title: string, from: string, to: string): string {
+  return svgDataUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+      <defs>
+        <linearGradient id="${seed}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${from}" />
+          <stop offset="100%" stop-color="${to}" />
+        </linearGradient>
+      </defs>
+      <rect width="128" height="128" fill="url(#${seed})" />
+      <text x="64" y="64" fill="white" font-size="64" font-weight="600" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">${title}</text>
+    </svg>
+  `);
+}
+
+export function getStaffAvatar(id: number, name: string) {
+  const palettes = [
+    ["#1677ff", "#69b1ff"],
+    ["#13c2c2", "#5cdbd3"],
+    ["#722ed1", "#b37feb"],
+    ["#eb2f96", "#ff85c0"],
+  ] as const;
+  const [from, to] = palettes[id % palettes.length] ?? palettes[0];
+  return svgAvatar(`staff-${id}`, name.slice(0, 1), from, to);
 }
 
 export const users: UserProfile[] = [
@@ -29,7 +58,7 @@ export const users: UserProfile[] = [
     id: "u_admin",
     username: "admin",
     nickname: "林知夏",
-    avatar: svgCover("admin", "夏", "#1677ff", "#69b1ff"),
+    avatar: svgAvatar("admin", "夏", "#1677ff", "#69b1ff"),
     email: "admin@example.com",
     phone: "13800000001",
     title: "平台管理员",
@@ -41,7 +70,7 @@ export const users: UserProfile[] = [
     id: "u_editor",
     username: "editor",
     nickname: "顾清和",
-    avatar: svgCover("editor", "顾", "#13c2c2", "#36cfc9"),
+    avatar: svgAvatar("editor", "顾", "#13c2c2", "#36cfc9"),
     email: "editor@example.com",
     phone: "13800000002",
     title: "内容编辑",
@@ -61,14 +90,20 @@ export const staff: Staff[] = Array.from({ length: 28 }, (_, index) => {
   const departments = ["研发中心", "产品部", "设计部", "内容运营"] as const;
   const roles = ["admin", "editor", "viewer"] as const;
   const names = ["陈予安", "苏晚晴", "周景行", "叶知秋", "沈慕白", "梁小满", "韩听澜", "许南风"];
+  const salaries = [
+    8600, 12800, 36000, 128000, 360000, 1_280_000, 12_800_000, 180_000_000, 1_280_000_000_000,
+  ];
+  const name = `${names[id % names.length]}${id}`;
   return {
     id: `staff_${id}`,
-    name: `${names[id % names.length]}${id}`,
+    name,
+    avatar: getStaffAvatar(id, name),
     email: `user${id}@example.com`,
     phone: `138${String(10000000 + id).slice(-8)}`,
     department: departments[id % departments.length],
     role: roles[id % roles.length],
     status: id % 7 === 0 ? "disabled" : "active",
+    salary: salaries[id % salaries.length] ?? 12000,
     createdAt: dayjs().subtract(id, "day").hour(9).minute(30).second(0).toISOString(),
   };
 });
@@ -127,11 +162,15 @@ export const articles: Article[] = [
 export const products: Product[] = [];
 
 export async function fileToMedia(file: File, uid: string): Promise<MediaFile> {
-  const bytes = Buffer.from(await file.arrayBuffer());
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = "";
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
   return {
     uid,
     name: file.name,
-    url: `data:${file.type || "application/octet-stream"};base64,${bytes.toString("base64")}`,
+    url: `data:${file.type || "application/octet-stream"};base64,${btoa(binary)}`,
     size: file.size,
     type: file.type,
   };

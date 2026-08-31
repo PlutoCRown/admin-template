@@ -7,7 +7,6 @@ body,
 
 * {
   /* 防止滚动条弹出页面左右跳动 */
-  scroll-behavior: smooth;
   scrollbar-color: #8888 transparent;
   scrollbar-width: thin;
 }
@@ -23,12 +22,14 @@ body,
     corner-shape: squircle;
   }
 
-  /* 含后代伪元素（如 Switch 圆球在 .ant-switch-handle::before） */
+  /* 含后代：Wave 波纹是插进按钮里的独立 div，不只伪元素 */
   :where(
     .ant-avatar,
     .ant-avatar *,
     .ant-btn-circle,
+    .ant-btn-circle *,
     .ant-btn-round,
+    .ant-btn-round *,
     .ant-switch,
     .ant-switch *,
     .ant-radio,
@@ -39,6 +40,7 @@ body,
     .ant-slider-handle,
     .ant-slider-handle *,
     .ant-float-btn:not(.ant-float-btn-square),
+    .ant-float-btn:not(.ant-float-btn-square) *,
     .ant-progress-circle,
     .ant-progress-circle *,
     .ant-spin-dot-item,

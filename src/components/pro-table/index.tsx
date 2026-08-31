@@ -5,11 +5,16 @@ import {
   type ProColumns as AntProColumns,
   type ProTableProps as AntProTableProps,
 } from "@ant-design/pro-components";
+import { useGlobalConfigStore } from "#stores/global-config";
+import { getRendererType, renderFormattedValue, type ProColumnRenderer } from "./format-renderer";
+import { SearchForm, type ProColumnSearch, type ProTableSearch } from "./search-form";
 import "./pro-table.css";
 
 export type { ActionType } from "@ant-design/pro-components";
 export { TagSelect } from "./tag-select";
 export type { TagSelectValue, TagSelectValueConfig, TagSelectValueEnum } from "./tag-select";
+export type { ProColumnRenderer } from "./format-renderer";
+export type { ProColumnSearch, ProTableSearch } from "./search-form";
 
 export type ProTableAction<T> = ActionType & {
   getDataSource: () => T[];
@@ -18,18 +23,21 @@ export type ProTableAction<T> = ActionType & {
 
 export type ProColumns<DataSource = unknown, ValueType = "text"> = Omit<
   AntProColumns<DataSource, ValueType>,
-  "children"
+  "children" | "search"
 > & {
   children?: ProColumns<DataSource>[];
   wrap?: boolean;
+  renderer?: ProColumnRenderer;
+  search?: boolean | ProColumnSearch;
 };
 
 type ProTableProps<
   DataSource extends Record<string, any>,
   Params extends Record<string, any>,
   ValueType,
-> = Omit<AntProTableProps<DataSource, Params, ValueType>, "columns"> & {
+> = Omit<AntProTableProps<DataSource, Params, ValueType>, "columns" | "search"> & {
   columns?: ProColumns<DataSource, ValueType>[];
+  search?: false | ProTableSearch;
 };
 
 const PRO_TABLE_CLASS_NAME = "admin-pro-table";
@@ -44,6 +52,25 @@ function appendClassName(origin: { className?: string } | undefined, className: 
     ...origin,
     className: origin?.className ? `${origin.className} ${className}` : className,
   };
+}
+
+function getRecordValue(record: Record<string, any>, dataIndex: unknown) {
+  if (Array.isArray(dataIndex)) {
+    return dataIndex.reduce<unknown>((current, key) => {
+      if (
+        !current ||
+        typeof current !== "object" ||
+        (typeof key !== "string" && typeof key !== "number")
+      ) {
+        return undefined;
+      }
+      return (current as Record<string, unknown>)[key];
+    }, record);
+  }
+  if (typeof dataIndex !== "string" && typeof dataIndex !== "number") {
+    return undefined;
+  }
+  return record[dataIndex];
 }
 
 export function ProTable<
@@ -63,8 +90,23 @@ export function ProTable<
     rowKey,
     scroll,
     tableLayout,
+    search,
+    params,
+    formRef,
+    form,
+    size,
+    dateFormatter,
+    beforeSearchSubmit,
+    onSubmit,
+    onLoadingChange,
     ...rest
   } = props;
+  const [searching, setSearching] = useState(false);
+  const [searchParams, setSearchParams] = useState<Record<string, any>>(
+    () => form?.initialValues ?? {},
+  );
+  const largeNumberFormat = useGlobalConfigStore((state) => state.dataDisplay.largeNumberFormat);
+  const dateFormat = useGlobalConfigStore((state) => state.dataDisplay.dateFormat);
   const innerRef = useRef<ActionType | undefined>(undefined);
   const rowsRef = useRef<DataSource[]>(Array.isArray(dataSource) ? dataSource : []);
   const overlayRef = useRef<DataSource[] | undefined>(undefined);
@@ -114,8 +156,8 @@ export function ProTable<
   };
 
   const handleRequest: typeof request = request
-    ? async (params, sort, filter) => {
-        const result = await request(params, sort, filter);
+    ? async (requestParams, sort, filter) => {
+        const result = await request(requestParams, sort, filter);
         overlayRef.current = undefined;
         rowsRef.current = result.data ?? [];
         setOverlay(undefined);
@@ -124,7 +166,7 @@ export function ProTable<
     : undefined;
 
   const renderColumn = (column: ProColumns<DataSource, any>): AntProColumns<DataSource, any> => {
-    const { children, wrap, ...columnProps } = column;
+    const { children, wrap, renderer, search: _search, ...columnProps } = column;
     const renderedChildren = children?.map(renderColumn);
     if (wrap) {
       const { onCell, onHeaderCell } = columnProps;
@@ -133,25 +175,73 @@ export function ProTable<
       columnProps.onHeaderCell = (item) =>
         appendClassName(onHeaderCell?.(item), CELL_WRAP_CLASS_NAME);
     }
+    if (renderer && !columnProps.render) {
+      const rendererType = getRendererType(renderer);
+      if (rendererType === "largeNumber") {
+        columnProps.align = columnProps.align ?? "right";
+      }
+      columnProps.render = (_dom, record) =>
+        renderFormattedValue(getRecordValue(record, column.dataIndex), renderer, {
+          largeNumber: largeNumberFormat,
+          dateTime: dateFormat,
+        });
+    }
     return { ...columnProps, children: renderedChildren };
   };
 
   const renderedColumns = columns?.map(renderColumn);
 
+  function handleSearch(values: Record<string, any>) {
+    const next = beforeSearchSubmit ? beforeSearchSubmit(values as Params) : values;
+    innerRef.current?.setPageInfo?.({ current: 1 });
+    setSearchParams(next);
+    onSubmit?.(next);
+  }
+
+  function handleLoadingChange(
+    status: Parameters<
+      NonNullable<AntProTableProps<DataSource, Params, ValueType>["onLoadingChange"]>
+    >[0],
+  ) {
+    setSearching(
+      typeof status === "object" && status ? status.spinning !== false : Boolean(status),
+    );
+    onLoadingChange?.(status);
+  }
+
   return (
-    <AntProTable<DataSource, Params, ValueType>
-      scroll={{ x: "max-content", y: "100%", ...scroll }}
-      tableLayout={tableLayout ?? "auto"}
-      {...rest}
-      actionRef={innerRef}
-      bordered={bordered}
-      options={options ?? false}
-      dataSource={overlay ?? dataSource}
-      columns={renderedColumns}
-      rowKey={rowKey}
-      tableClassName={getTableClassName(tableClassName)}
-      onDataSourceChange={handleDataSourceChange}
-      request={handleRequest}
-    />
+    <div className="admin-pro-table-shell">
+      {search !== false ? (
+        <SearchForm
+          columns={columns ?? []}
+          search={search ?? {}}
+          loading={searching}
+          formRef={formRef}
+          form={form}
+          size={size}
+          dateFormatter={dateFormatter}
+          onSearch={handleSearch}
+        />
+      ) : null}
+      <AntProTable<DataSource, Params, ValueType>
+        scroll={{ x: "max-content", y: "100%", ...scroll }}
+        tableLayout={tableLayout ?? "auto"}
+        {...rest}
+        search={false}
+        params={{ ...params, ...searchParams } as Params}
+        size={size}
+        dateFormatter={dateFormatter}
+        actionRef={innerRef}
+        bordered={bordered}
+        options={options ?? false}
+        dataSource={overlay ?? dataSource}
+        columns={renderedColumns}
+        rowKey={rowKey}
+        tableClassName={getTableClassName(tableClassName)}
+        onDataSourceChange={handleDataSourceChange}
+        onLoadingChange={handleLoadingChange}
+        request={handleRequest}
+      />
+    </div>
   );
 }

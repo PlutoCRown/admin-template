@@ -5,11 +5,13 @@ export type UserStatus = "active" | "disabled";
 export interface Staff {
   id: string;
   name: string;
+  avatar: string;
   email: string;
   phone: string;
   department: string;
   role: "admin" | "editor" | "viewer";
   status: UserStatus;
+  salary: number;
   createdAt: string;
 }
 

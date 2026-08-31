@@ -2,7 +2,16 @@ import react from "@vitejs/plugin-react";
 import { defineConfig, lazyPlugins } from "vite-plus";
 import { mockProxy, mockServerReminder } from "./mock/config";
 
+function resolveBase(): string {
+  const fromEnv = process.env.VITE_BASE_PATH;
+  if (!fromEnv) {
+    return "/";
+  }
+  return fromEnv.endsWith("/") ? fromEnv : `${fromEnv}/`;
+}
+
 export default defineConfig({
+  base: resolveBase(),
   plugins: lazyPlugins(() => [mockServerReminder(), react({ compiler: true })]),
   server: {
     port: 5173,

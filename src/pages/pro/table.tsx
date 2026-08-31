@@ -3,7 +3,9 @@ import { getStaffListApi, type Staff } from "#api/pro/staff";
 import { PageContainer } from "#components/page-container";
 import { ProTable, type ProColumns, type ProTableAction } from "#components/pro-table";
 import { CreateStaffButton } from "./create-staff-button";
+import { NameEditor } from "./name-editor";
 import { departmentOptions, roleEnum, statusEnum } from "./staff-options";
+import { StaffImage } from "./staff-image";
 import { StaffRowActions } from "./staff-row-actions";
 import { StatusRenderer } from "./status-renderer";
 
@@ -34,8 +36,24 @@ export function ProTablePage() {
   const actionRef = useRef<ProTableAction<Staff>>(null);
 
   const columns: ProColumns<Staff>[] = [
-    { title: "姓名", dataIndex: "name", fixed: "left" },
-    { title: "邮箱", dataIndex: "email", copyable: true },
+    {
+      title: "图片",
+      dataIndex: "avatar",
+      align: "center",
+      fixed: "left",
+      search: false,
+      width: 80,
+      render: (_, record) => <StaffImage alt={record.name} src={record.avatar} />,
+    },
+    {
+      title: "姓名",
+      dataIndex: "name",
+      fixed: "left",
+      width: 100,
+      search: { width: 4 },
+      render: (_, record) => <NameEditor record={record} actionRef={actionRef} />,
+    },
+    { title: "邮箱", dataIndex: "email", copyable: true, search: { width: 18 } },
     {
       title: "部门",
       dataIndex: "department",
@@ -45,16 +63,23 @@ export function ProTablePage() {
     },
     { title: "角色", dataIndex: "role", valueEnum: roleEnum },
     {
+      title: "年薪",
+      dataIndex: "salary",
+      renderer: "largeNumber",
+      search: false,
+    },
+    {
       title: "状态",
       dataIndex: "status",
       valueEnum: statusEnum,
       render: (_, record) => <StatusRenderer record={record} actionRef={actionRef} />,
     },
-    { title: "创建时间", dataIndex: "createdAt", valueType: "dateTime", search: false },
+    { title: "创建时间", dataIndex: "createdAt", renderer: "dateTime", search: false },
     {
       title: "操作",
       valueType: "option",
       fixed: "right",
+      width: 100,
       render: (_, record) => <StaffRowActions record={record} actionRef={actionRef} />,
     },
   ];
@@ -65,7 +90,7 @@ export function ProTablePage() {
         rowKey="id"
         actionRef={actionRef}
         columns={columns}
-        search={{ labelWidth: "auto" }}
+        search={{ collapsible: true }}
         headerTitle="员工列表"
         toolBarRender={() => [<CreateStaffButton key="create" actionRef={actionRef} />]}
         request={requestStaffList}

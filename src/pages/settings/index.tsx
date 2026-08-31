@@ -1,11 +1,12 @@
-import { BgColorsOutlined, MenuOutlined, UserOutlined } from "@ant-design/icons";
+import { BgColorsOutlined, MenuOutlined, TableOutlined, UserOutlined } from "@ant-design/icons";
 import { Grid, type TabsProps } from "antd";
 import { FullScreenModal } from "#components/full-screen-modal";
 import { AccountPanel } from "./account-panel";
 import { AppearancePanel } from "./appearance-panel";
+import { DataDisplayPanel } from "./data-display-panel";
 import { MenuPanel } from "./menu-panel";
 
-export type SettingsSection = "appearance" | "menu" | "account";
+export type SettingsSection = "appearance" | "data-display" | "menu" | "account";
 
 interface SettingsModalProps {
   open: boolean;
@@ -27,6 +28,12 @@ export function SettingsModal({
       label: "外观",
       icon: <BgColorsOutlined />,
       children: <AppearancePanel />,
+    },
+    {
+      key: "data-display",
+      label: "数据显示",
+      icon: <TableOutlined />,
+      children: <DataDisplayPanel />,
     },
     {
       key: "menu",

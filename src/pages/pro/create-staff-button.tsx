@@ -6,6 +6,7 @@ import { createStaffApi, type Staff, type StaffPayload } from "#api/pro/staff";
 import { type ProTableAction } from "#components/pro-table";
 import { runOptimistic } from "#hooks/use-optimistic";
 import { StaffFormFields } from "./staff-form-fields";
+import { DEFAULT_STAFF_IMAGE } from "./staff-image";
 
 interface CreateStaffButtonProps {
   actionRef: RefObject<ProTableAction<Staff> | null>;
@@ -20,7 +21,9 @@ export function CreateStaffButton({ actionRef }: CreateStaffButtonProps) {
     const temp: Staff = {
       ...values,
       id: `tmp_${Date.now()}`,
+      avatar: DEFAULT_STAFF_IMAGE,
       createdAt: new Date().toISOString(),
+      salary: 120000,
     };
     const ok = await runOptimistic({
       snapshot,

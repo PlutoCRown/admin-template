@@ -1,0 +1,65 @@
+.admin-pro-table-search-wrap {
+  flex: none;
+  margin-bottom: 16px;
+}
+
+.admin-pro-table-search.ch-form {
+  --admin-pro-table-search-row-height: 32px;
+  height: auto;
+  overflow: visible;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+}
+
+.admin-pro-table-search.ant-form-small {
+  --admin-pro-table-search-row-height: 24px;
+}
+
+.admin-pro-table-search.ant-form-large {
+  --admin-pro-table-search-row-height: 40px;
+}
+
+.admin-pro-table-search-fields {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  max-height: var(--admin-pro-table-search-fields-height, none);
+  transition: max-height 0.22s ease;
+}
+
+.admin-pro-table-search-fields.is-collapsed {
+  max-height: var(--admin-pro-table-search-row-height);
+}
+
+.admin-pro-table-search-fields-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 1.5em;
+  row-gap: calc(18em / 14);
+}
+
+.admin-pro-table-search.ant-form-small .admin-pro-table-search-fields-inner {
+  column-gap: 1em;
+  row-gap: calc(12em / 14);
+}
+
+.admin-pro-table-search.ant-form-large .admin-pro-table-search-fields-inner {
+  column-gap: 2em;
+  row-gap: calc(24em / 14);
+}
+
+.admin-pro-table-search-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: var(--admin-pro-table-search-row-height);
+  margin-inline-start: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-pro-table-search-fields {
+    transition: none;
+  }
+}

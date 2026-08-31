@@ -1,3 +1,15 @@
+.admin-pro-table-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.admin-pro-table-shell > .ant-pro-table {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .admin-pro-table .ant-table-cell {
   white-space: nowrap;
 }
@@ -22,6 +34,10 @@
 }
 
 .admin-pro-table-tag-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
   padding: 0;
   border: 0;
   background: transparent;
