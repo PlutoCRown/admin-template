@@ -1,21 +1,12 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
-import { DownOutlined, HolderOutlined, RightOutlined } from "@ant-design/icons";
-import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  closestCenter,
-  defaultDropAnimationSideEffects,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
-  type DropAnimation,
-} from "@dnd-kit/core";
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { useState, type ReactNode } from "react";
+import { DownOutlined, RightOutlined } from "@ant-design/icons";
 import { Button, Switch } from "antd";
-import { DragOverlaySurface } from "#components/drag-overlay-surface";
+import {
+  SortableHandleButton,
+  SortableItem,
+  SortableList,
+  type SortableMoveEvent,
+} from "#components/sortable-list";
 import { getOrderedMenuRoutes, type AppMenuRoute, type MenuOrder } from "#router/menu";
 import { useGlobalConfigStore } from "#stores/global-config";
 import "./menu-editor.css";
@@ -32,24 +23,6 @@ interface SortableMenuLevelProps extends Omit<MenuEditorProps, "root"> {
   onToggleCollapsed: (path: string) => void;
   nested?: boolean;
 }
-
-const MENU_SORT_TRANSITION = {
-  duration: 250,
-  easing: "cubic-bezier(0.25, 1, 0.5, 1)",
-};
-
-const dropAnimation: DropAnimation = {
-  duration: MENU_SORT_TRANSITION.duration,
-  easing: MENU_SORT_TRANSITION.easing,
-  sideEffects(params) {
-    params.dragOverlay.node.querySelector(".is-lifted")?.classList.remove("is-lifted");
-    return defaultDropAnimationSideEffects({
-      styles: {
-        active: { opacity: "0" },
-      },
-    })(params);
-  },
-};
 
 interface MenuItemViewProps {
   item: AppMenuRoute;
@@ -120,30 +93,17 @@ function SortableMenuTreeItem({
   children?: ReactNode;
 }) {
   const setVisible = useGlobalConfigStore((state) => state.setMenuItemVisible);
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    setActivatorNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: item.path, transition: MENU_SORT_TRANSITION });
   const hasChildren = Boolean(children);
-  const style: CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition: isDragging ? undefined : transition,
-    opacity: isDragging ? 0 : undefined,
-    zIndex: isDragging ? 1 : undefined,
+  const handleVisibleChange = (checked: boolean) => {
+    setVisible(item.path, checked);
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      className={["settings-menu-tree-item", isDragging ? "settings-menu-tree-item-dragging" : ""]
-        .filter(Boolean)
-        .join(" ")}
-      style={style}
+    <SortableItem
+      id={item.path}
+      className="settings-menu-tree-item"
+      draggingClassName="settings-menu-tree-item-dragging"
+      draggingZIndex={1}
     >
       <MenuItemView
         item={item}
@@ -151,22 +111,17 @@ function SortableMenuTreeItem({
         collapsed={collapsed}
         hasChildren={hasChildren}
         onToggleCollapsed={onToggleCollapsed}
-        onVisibleChange={(checked) => setVisible(item.path, checked)}
+        onVisibleChange={handleVisibleChange}
         dragHandle={
-          <Button
-            ref={setActivatorNodeRef}
-            type="text"
+          <SortableHandleButton
             size="small"
             className="settings-menu-drag-handle"
-            icon={<HolderOutlined />}
             aria-label={`拖动调整${item.name ?? item.path}顺序`}
-            {...attributes}
-            {...listeners}
           />
         }
       />
       {hasChildren && !collapsed ? children : null}
-    </div>
+    </SortableItem>
   );
 }
 
@@ -194,14 +149,7 @@ function MenuBranchPreview({
         hasChildren={hasChildren}
         overlay
         dragHandle={
-          <Button
-            type="text"
-            size="small"
-            className="settings-menu-drag-handle"
-            icon={<HolderOutlined />}
-            tabIndex={-1}
-            aria-hidden
-          />
+          <SortableHandleButton overlay size="small" className="settings-menu-drag-handle" />
         }
       />
       {hasChildren && !collapsed ? (
@@ -230,93 +178,65 @@ function SortableMenuLevel({
   nested = false,
 }: SortableMenuLevelProps) {
   const moveItem = useGlobalConfigStore((state) => state.moveMenuItem);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [overlayWidth, setOverlayWidth] = useState<number>();
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 6 },
-    }),
-  );
   const items = getOrderedMenuRoutes(parent, order);
   const ids = items.map((item) => item.path);
-  const activeItem = activeId ? items.find((item) => item.path === activeId) : undefined;
 
-  const handleDragStart = ({ active }: DragStartEvent) => {
-    setActiveId(String(active.id));
-    setOverlayWidth(active.rect.current.initial?.width);
+  const handleMove = ({ fromIndex, toIndex }: SortableMoveEvent) => {
+    moveItem(parent.path, fromIndex, toIndex);
   };
 
-  const handleDragCancel = () => {
-    setActiveId(null);
-    setOverlayWidth(undefined);
+  const renderOverlay = (activeId: string | number) => {
+    const activeItem = items.find((item) => item.path === activeId);
+    return activeItem ? (
+      <MenuBranchPreview
+        item={activeItem}
+        order={order}
+        hiddenPaths={hiddenPaths}
+        collapsedPaths={collapsedPaths}
+      />
+    ) : null;
   };
 
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    setActiveId(null);
-    setOverlayWidth(undefined);
-    if (!over || active.id === over.id) {
-      return;
-    }
-    const fromIndex = ids.indexOf(String(active.id));
-    const toIndex = ids.indexOf(String(over.id));
-    if (fromIndex >= 0 && toIndex >= 0) {
-      moveItem(parent.path, fromIndex, toIndex);
-    }
+  const renderMenuItem = (item: AppMenuRoute) => {
+    const handleToggleItemCollapsed = () => {
+      onToggleCollapsed(item.path);
+    };
+    const childMenu = item.routes?.length ? (
+      <SortableMenuLevel
+        parent={item}
+        order={order}
+        hiddenPaths={hiddenPaths}
+        collapsedPaths={collapsedPaths}
+        onToggleCollapsed={onToggleCollapsed}
+        nested
+      />
+    ) : null;
+    return (
+      <SortableMenuTreeItem
+        key={item.path}
+        item={item}
+        visible={!hiddenPaths.includes(item.path)}
+        collapsed={collapsedPaths.includes(item.path)}
+        onToggleCollapsed={handleToggleItemCollapsed}
+      >
+        {childMenu}
+      </SortableMenuTreeItem>
+    );
   };
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragCancel={handleDragCancel}
+    <SortableList
+      ids={ids}
+      onMove={handleMove}
+      renderOverlay={renderOverlay}
+      overlayClassName="settings-menu-drag-overlay"
     >
-      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-        <div
-          className={nested ? "settings-menu-list settings-menu-list-nested" : "settings-menu-list"}
-        >
-          {items.map((item) => {
-            const childMenu = item.routes?.length ? (
-              <SortableMenuLevel
-                parent={item}
-                order={order}
-                hiddenPaths={hiddenPaths}
-                collapsedPaths={collapsedPaths}
-                onToggleCollapsed={onToggleCollapsed}
-                nested
-              />
-            ) : null;
-            return (
-              <SortableMenuTreeItem
-                key={item.path}
-                item={item}
-                visible={!hiddenPaths.includes(item.path)}
-                collapsed={collapsedPaths.includes(item.path)}
-                onToggleCollapsed={() => onToggleCollapsed(item.path)}
-              >
-                {childMenu}
-              </SortableMenuTreeItem>
-            );
-          })}
-        </div>
-      </SortableContext>
-      <DragOverlay dropAnimation={dropAnimation}>
-        {activeItem ? (
-          <DragOverlaySurface
-            className="settings-menu-drag-overlay"
-            style={{ width: overlayWidth }}
-          >
-            <MenuBranchPreview
-              item={activeItem}
-              order={order}
-              hiddenPaths={hiddenPaths}
-              collapsedPaths={collapsedPaths}
-            />
-          </DragOverlaySurface>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+      <div
+        className={nested ? "settings-menu-list settings-menu-list-nested" : "settings-menu-list"}
+      >
+        {items.map(renderMenuItem)}
+      </div>
+    </SortableList>
   );
 }
 

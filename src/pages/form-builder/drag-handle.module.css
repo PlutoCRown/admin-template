@@ -1,0 +1,13 @@
+.handle {
+  color: var(--ant-color-text-secondary);
+  cursor: grab;
+  touch-action: none;
+
+  &:hover {
+    color: var(--ant-color-primary);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}

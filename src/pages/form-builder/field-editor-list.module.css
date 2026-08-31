@@ -1,0 +1,20 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.overlay {
+  cursor: grabbing;
+  border-radius: var(--ant-border-radius, 10px);
+  box-shadow: none;
+  transition: box-shadow 180ms ease;
+
+  &:global(.is-lifted) {
+    box-shadow: 0 10px 28px rgb(0 0 0 / 16%);
+  }
+
+  :global(.ant-pro-card) {
+    margin: 0;
+  }
+}

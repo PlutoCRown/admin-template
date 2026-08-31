@@ -1,0 +1,19 @@
+.card {
+  position: sticky;
+  top: 16px;
+  min-width: 0;
+
+  @media (width <= 1180px) {
+    position: static;
+  }
+}
+
+.form {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 260px;
+
+  :global(.ant-pro-form-submitter) {
+    display: none;
+  }
+}

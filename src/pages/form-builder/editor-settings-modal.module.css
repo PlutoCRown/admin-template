@@ -1,0 +1,6 @@
+.form {
+  --ch-default-label-width: calc(7 * var(--form-ch));
+
+  height: auto;
+  overflow: visible;
+}

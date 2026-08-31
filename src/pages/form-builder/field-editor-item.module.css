@@ -1,0 +1,48 @@
+.card:global(.ant-pro-card) {
+  background: var(--ant-color-bg-container);
+  border: 1px solid var(--ant-color-border-secondary);
+  border-radius: var(--ant-border-radius, 10px);
+
+  &:global(.ant-pro-card-size-small) {
+    :global(.ant-pro-card-header) {
+      min-height: 0;
+      padding-block: 8px;
+      padding-inline: 8px;
+    }
+  }
+
+  :global(.ant-pro-card-title) {
+    padding-inline-start: 0;
+    font-weight: 400;
+  }
+
+  :global(.ant-pro-card-extra) {
+    padding-inline-end: 0;
+  }
+
+  :global(.ant-pro-card-body) {
+    padding: 8px 12px 12px;
+  }
+}
+
+.form {
+  height: auto;
+  overflow: visible;
+}
+
+.fieldName {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.optionList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-block-start: 12px;
+}
+
+.optionListTitle {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 22px;
+}

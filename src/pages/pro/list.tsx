@@ -15,6 +15,7 @@ export function ProListPage() {
         headerTitle="内容列表"
         pagination={{ pageSize: 6 }}
         search={{ filterType: "light" }}
+        toolbar={{ multipleLine: true }}
         metas={{
           title: { dataIndex: "title", title: "标题" },
           avatar: { dataIndex: "cover", search: false },

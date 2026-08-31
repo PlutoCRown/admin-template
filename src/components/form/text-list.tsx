@@ -1,34 +1,15 @@
-import {
-  useId,
-  useRef,
-  useState,
-  type ComponentProps,
-  type CSSProperties,
-  type ReactNode,
-} from "react";
-import { HolderOutlined, MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
-import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  closestCenter,
-  defaultDropAnimationSideEffects,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
-  type DropAnimation,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  useSortable,
-  verticalListSortingStrategy,
-  type AnimateLayoutChanges,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { useId, useState, type ComponentProps, type ReactNode } from "react";
+import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import { arrayMove } from "@dnd-kit/sortable";
 import { ProForm as AntProForm, type ProFormItemProps } from "@ant-design/pro-components";
 import { Button, Input } from "antd";
+import {
+  SortableHandleButton,
+  SortableItem,
+  SortableList,
+  preventLayoutAnimationAfterSorting,
+  type SortableMoveEvent,
+} from "#components/sortable-list";
 import { chFormItemProps, type ChWidthProps } from "./ch";
 import "./text-list.css";
 
@@ -50,58 +31,39 @@ export interface TextListProps {
   className?: string;
 }
 
-type DragHandleButtonProps = { overlay?: boolean } & ComponentProps<typeof Button>;
-
-const SORTABLE_TRANSITION = {
-  duration: 250,
-  easing: "cubic-bezier(0.25, 1, 0.5, 1)",
-};
-const animateLayoutChanges: AnimateLayoutChanges = ({ isSorting, wasDragging }) =>
-  !(isSorting || wasDragging);
-const dropAnimation: DropAnimation = {
-  duration: SORTABLE_TRANSITION.duration,
-  easing: SORTABLE_TRANSITION.easing,
-  sideEffects: defaultDropAnimationSideEffects({
-    styles: {
-      active: { opacity: "0" },
-    },
-  }),
-};
-
-function DragHandleButton({ overlay, className, ...props }: DragHandleButtonProps) {
-  return (
-    <Button
-      type="text"
-      icon={<HolderOutlined />}
-      className={["ch-text-list-drag-handle", className].filter(Boolean).join(" ")}
-      tabIndex={overlay ? -1 : undefined}
-      aria-hidden={overlay || undefined}
-      {...props}
-    />
-  );
+interface ItemIdState {
+  ids: string[];
+  sequence: number;
 }
 
-function nextItemId(prefix: string, sequence: { current: number }) {
-  sequence.current += 1;
-  return `${prefix}_${sequence.current}`;
+function createItemIdState(prefix: string, length: number): ItemIdState {
+  return {
+    ids: Array.from({ length }, (_, index) => `${prefix}_${index + 1}`),
+    sequence: length,
+  };
 }
 
-function reconcileIds(
-  prev: string[],
-  length: number,
-  prefix: string,
-  sequence: { current: number },
-) {
-  if (prev.length === length) {
+function reconcileItemIds(prev: ItemIdState, length: number, prefix: string) {
+  if (prev.ids.length === length) {
     return prev;
   }
-  if (length > prev.length) {
-    return [
-      ...prev,
-      ...Array.from({ length: length - prev.length }, () => nextItemId(prefix, sequence)),
-    ];
+  if (length > prev.ids.length) {
+    const addedCount = length - prev.ids.length;
+    return {
+      ids: [
+        ...prev.ids,
+        ...Array.from(
+          { length: addedCount },
+          (_, index) => `${prefix}_${prev.sequence + index + 1}`,
+        ),
+      ],
+      sequence: prev.sequence + addedCount,
+    };
   }
-  return prev.slice(0, length);
+  return {
+    ...prev,
+    ids: prev.ids.slice(0, length),
+  };
 }
 
 function resolveCreatorValue(creatorValue: TextListProps["creatorValue"], list: string[]) {
@@ -153,45 +115,28 @@ function TextListRow({
 function SortableTextListRow({
   id,
   ...rowProps
-}: {
-  id: string;
-} & ComponentProps<typeof TextListRow>) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    setActivatorNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id,
-    transition: SORTABLE_TRANSITION,
-    animateLayoutChanges,
-  });
-  const style: CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition: isDragging ? undefined : transition,
-    opacity: isDragging ? 0 : undefined,
-  };
-
+}: { id: string } & ComponentProps<typeof TextListRow>) {
   return (
-    <div ref={setNodeRef} style={style} className="ch-text-list-row">
+    <SortableItem
+      id={id}
+      className="ch-text-list-row"
+      animateLayoutChanges={preventLayoutAnimationAfterSorting}
+    >
       <TextListRow
         {...rowProps}
         dragHandle={
-          <DragHandleButton
-            ref={setActivatorNodeRef}
+          <SortableHandleButton
+            className="ch-text-list-drag-handle"
             disabled={rowProps.disabled}
             aria-label="拖动调整顺序"
-            {...attributes}
-            {...listeners}
           />
         }
       />
-    </div>
+    </SortableItem>
   );
 }
+
+function noop() {}
 
 export function TextList({
   value,
@@ -206,22 +151,13 @@ export function TextList({
   className,
 }: TextListProps) {
   const listId = useId();
-  const sequence = useRef(0);
   const items = value ?? [];
-  const [ids, setIds] = useState<string[]>(() => items.map(() => nextItemId(listId, sequence)));
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [overlayWidth, setOverlayWidth] = useState<number>();
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 6 },
-    }),
-  );
-  const syncedIds = reconcileIds(ids, items.length, listId, sequence);
-  if (syncedIds !== ids) {
-    setIds(syncedIds);
+  const [itemIdState, setItemIdState] = useState(() => createItemIdState(listId, items.length));
+  const syncedItemIdState = reconcileItemIds(itemIdState, items.length, listId);
+  if (syncedItemIdState !== itemIdState) {
+    setItemIdState(syncedItemIdState);
   }
-  const activeIndex = activeId ? syncedIds.indexOf(activeId) : -1;
-  const activeValue = activeIndex >= 0 ? items[activeIndex] : undefined;
+  const syncedIds = syncedItemIdState.ids;
   const canSort = sortable && !disabled;
 
   const emit = (next: string[]) => {
@@ -232,34 +168,45 @@ export function TextList({
   };
   const handleRemove = (index: number) => {
     emit(items.filter((_, itemIndex) => itemIndex !== index));
-    setIds((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
+    setItemIdState((prev) => ({
+      ...prev,
+      ids: prev.ids.filter((_, itemIndex) => itemIndex !== index),
+    }));
   };
   const handleAdd = () => {
     emit([...items, resolveCreatorValue(creatorValue, items)]);
-    setIds((prev) => [...prev, nextItemId(listId, sequence)]);
+    setItemIdState((prev) => {
+      const synced = reconcileItemIds(prev, items.length, listId);
+      const sequence = synced.sequence + 1;
+      return {
+        ids: [...synced.ids, `${listId}_${sequence}`],
+        sequence,
+      };
+    });
   };
-  const handleDragStart = ({ active }: DragStartEvent) => {
-    setActiveId(String(active.id));
-    setOverlayWidth(active.rect.current.initial?.width);
-  };
-  const handleDragCancel = () => {
-    setActiveId(null);
-    setOverlayWidth(undefined);
-  };
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    setActiveId(null);
-    setOverlayWidth(undefined);
-    if (!over || active.id === over.id) {
-      return;
-    }
-    const fromIndex = syncedIds.indexOf(String(active.id));
-    const toIndex = syncedIds.indexOf(String(over.id));
-    if (fromIndex < 0 || toIndex < 0) {
-      return;
-    }
+  const handleMove = ({ fromIndex, toIndex }: SortableMoveEvent) => {
     emit(arrayMove(items, fromIndex, toIndex));
-    setIds((prev) =>
-      arrayMove(reconcileIds(prev, items.length, listId, sequence), fromIndex, toIndex),
+    setItemIdState((prev) => {
+      const synced = reconcileItemIds(prev, items.length, listId);
+      return {
+        ...synced,
+        ids: arrayMove(synced.ids, fromIndex, toIndex),
+      };
+    });
+  };
+
+  const renderOverlay = (activeId: string | number) => {
+    const activeIndex = syncedIds.indexOf(String(activeId));
+    const activeValue = activeIndex >= 0 ? items[activeIndex] : undefined;
+    return activeValue == null ? null : (
+      <TextListRow
+        value={activeValue}
+        placeholder={placeholder}
+        removable={removable}
+        dragHandle={<SortableHandleButton overlay className="ch-text-list-drag-handle" />}
+        onChange={noop}
+        onRemove={noop}
+      />
     );
   };
 
@@ -288,13 +235,7 @@ export function TextList({
 
   const list = (
     <div className={["ch-text-list", className].filter(Boolean).join(" ")}>
-      {canSort ? (
-        <SortableContext items={syncedIds} strategy={verticalListSortingStrategy}>
-          <div className="ch-text-list-body">{rows}</div>
-        </SortableContext>
-      ) : (
-        <div className="ch-text-list-body">{rows}</div>
-      )}
+      <div className="ch-text-list-body">{rows}</div>
       {creator ? (
         <Button
           type="dashed"
@@ -315,29 +256,14 @@ export function TextList({
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragCancel={handleDragCancel}
+    <SortableList
+      ids={syncedIds}
+      onMove={handleMove}
+      renderOverlay={renderOverlay}
+      overlayClassName="ch-text-list-row ch-text-list-overlay"
     >
       {list}
-      <DragOverlay dropAnimation={dropAnimation}>
-        {activeValue != null && activeId ? (
-          <div className="ch-text-list-row ch-text-list-overlay" style={{ width: overlayWidth }}>
-            <TextListRow
-              value={activeValue}
-              placeholder={placeholder}
-              removable={removable}
-              dragHandle={<DragHandleButton overlay />}
-              onChange={() => undefined}
-              onRemove={() => undefined}
-            />
-          </div>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+    </SortableList>
   );
 }
 

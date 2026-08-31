@@ -3,17 +3,13 @@ body,
 #root {
   height: 100%;
   margin: 0;
-  /* 防止滚动条弹出页面左右跳动 */
-  scrollbar-gutter: stable;
-  scroll-behavior: smooth;
-  scrollbar-color: #8888 rgb(245, 245, 245);
-  scrollbar-width: thin;
 }
 
-html[data-theme="dark"],
-html[data-theme="dark"] body,
-html[data-theme="dark"] #root {
-  scrollbar-color: #8888 rgb(0, 0, 0);
+* {
+  /* 防止滚动条弹出页面左右跳动 */
+  scroll-behavior: smooth;
+  scrollbar-color: #8888 transparent;
+  scrollbar-width: thin;
 }
 
 /*
