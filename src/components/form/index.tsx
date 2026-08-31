@@ -8,7 +8,22 @@ import { chFormItemProps, type ChWidthProps } from "./ch";
 import "./ch-form.css";
 
 export { chFormItemProps, type ChWidthProps } from "./ch";
-export { FormCheckbox, FormDigit, FormRadio, FormSelect, FormText, FormTextArea } from "./fields";
+export {
+  FormCascader,
+  FormCheckbox,
+  FormDate,
+  FormDateTime,
+  FormDigit,
+  FormMoney,
+  FormRadio,
+  FormSegmented,
+  FormSelect,
+  FormSwitch,
+  FormText,
+  FormTextArea,
+  FormTime,
+  FormTreeSelect,
+} from "./fields";
 
 export interface ChProFormProps<T extends Record<string, any>> extends ProFormProps<T> {
   /** 表单内所有未单独声明 labelWidth 的表单项默认标签宽度，单位为方块字符（1em）。不传或 0 时按文字自动撑开 */

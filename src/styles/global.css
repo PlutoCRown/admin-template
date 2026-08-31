@@ -3,4 +3,6 @@ body,
 #root {
   height: 100%;
   margin: 0;
+  /* 防止滚动条弹出页面左右跳动 */
+  scrollbar-gutter: stable;
 }

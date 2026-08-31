@@ -12,21 +12,23 @@ import {
   DragOverlay,
   PointerSensor,
   closestCenter,
+  defaultDropAnimationSideEffects,
   useSensor,
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
+  type DropAnimation,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   arrayMove,
   useSortable,
   verticalListSortingStrategy,
-  type AnimateLayoutChanges,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ProCard, ProList } from "@ant-design/pro-components";
 import { Button, Input, InputNumber, Popconfirm, Select, Switch } from "antd";
+import { DragOverlaySurface } from "#components/drag-overlay-surface";
 import {
   FIELD_TYPE_OPTIONS,
   applyFieldTypeDefaults,
@@ -126,8 +128,22 @@ function OptionEditorList({ options, onChange }: OptionEditorListProps) {
 }
 
 const DragHandleContext = createContext<ReactNode>(null);
-const animateLayoutChanges: AnimateLayoutChanges = ({ isSorting, wasDragging }) =>
-  !(isSorting || wasDragging);
+const SORTABLE_TRANSITION = {
+  duration: 250,
+  easing: "cubic-bezier(0.25, 1, 0.5, 1)",
+};
+const dropAnimation: DropAnimation = {
+  duration: SORTABLE_TRANSITION.duration,
+  easing: SORTABLE_TRANSITION.easing,
+  sideEffects(params) {
+    params.dragOverlay.node.querySelector(".is-lifted")?.classList.remove("is-lifted");
+    return defaultDropAnimationSideEffects({
+      styles: {
+        active: { opacity: "0" },
+      },
+    })(params);
+  },
+};
 
 function OverlayDragHandle() {
   return (
@@ -150,7 +166,7 @@ function SortableListItem({ id, children }: SortableListItemProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id, animateLayoutChanges });
+  } = useSortable({ id, transition: SORTABLE_TRANSITION });
   const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition: isDragging ? undefined : transition,
@@ -239,7 +255,13 @@ function FieldEditorItem({ field, onUpdate, onRemove }: FieldEditorItemProps) {
         </label>
         <label className="form-builder-field-control">
           <span>字段类型</span>
-          <Select value={field.type} options={FIELD_TYPE_OPTIONS} onChange={handleTypeChange} />
+          <Select
+            value={field.type}
+            options={FIELD_TYPE_OPTIONS}
+            onChange={handleTypeChange}
+            showSearch
+            optionFilterProp="label"
+          />
         </label>
         <label className="form-builder-field-control form-builder-field-width-control">
           <span>表单项宽度</span>
@@ -371,16 +393,19 @@ export function FieldEditorList({ fields, onChange }: FieldEditorListProps) {
           className="form-builder-field-list"
         />
       </SortableContext>
-      <DragOverlay dropAnimation={null}>
+      <DragOverlay dropAnimation={dropAnimation}>
         {activeField ? (
           <DragHandleContext.Provider value={<OverlayDragHandle />}>
-            <div className="form-builder-sortable-overlay" style={{ width: overlayWidth }}>
+            <DragOverlaySurface
+              className="form-builder-sortable-overlay"
+              style={{ width: overlayWidth }}
+            >
               <FieldEditorItem
                 field={activeField}
                 onUpdate={handleUpdate}
                 onRemove={handleRemove}
               />
-            </div>
+            </DragOverlaySurface>
           </DragHandleContext.Provider>
         ) : null}
       </DragOverlay>

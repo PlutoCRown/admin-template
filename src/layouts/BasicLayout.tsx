@@ -1,12 +1,11 @@
-import { LogoutOutlined, UserOutlined } from "@ant-design/icons";
+import { useState, type ReactNode } from "react";
+import { UserOutlined } from "@ant-design/icons";
 import { ProLayout, type MenuDataItem } from "@ant-design/pro-components";
-import { Dropdown } from "antd";
-import type { ReactNode } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
-import { logoutApi } from "#api/auth";
+import { SettingsModal } from "#components/settings-modal";
 import { pageContainerToken } from "#components/page-container";
 import { menuRoute } from "#router/menu";
-import { useUserStore } from "#stores/user";
+import { UserAccountBar } from "./user-account-bar";
 
 function renderMenuItem(item: MenuDataItem, dom: ReactNode) {
   const hasChildren = Boolean(item.children?.length);
@@ -16,70 +15,38 @@ function renderMenuItem(item: MenuDataItem, dom: ReactNode) {
   return <Link to={item.path}>{dom}</Link>;
 }
 
-function UserAvatar({ dom, onLogout }: { dom: ReactNode; onLogout: () => void }) {
-  return (
-    <Dropdown
-      menu={{
-        items: [
-          {
-            key: "logout",
-            icon: <LogoutOutlined />,
-            label: "退出登录",
-            onClick: onLogout,
-          },
-        ],
-      }}
-    >
-      {dom}
-    </Dropdown>
-  );
-}
-
 export function BasicLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const user = useUserStore((state) => state.user);
-  const clearAuth = useUserStore((state) => state.clearAuth);
-
-  const handleLogout = async () => {
-    try {
-      await logoutApi();
-    } catch {
-      // 错误已由接口拦截器 Notification 提示
-    }
-    clearAuth();
-    void navigate("/login", { replace: true });
-  };
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
-    <ProLayout
-      title="Admin Template"
-      layout="side"
-      fixSiderbar
-      location={location}
-      route={menuRoute}
-      logo={<UserOutlined />}
-      menu={{ defaultOpenAll: true, autoClose: false }}
-      menuItemRender={renderMenuItem}
-      onMenuHeaderClick={() => navigate("/dashboard")}
-      token={{
-        pageContainer: pageContainerToken,
-      }}
-      avatarProps={{
-        src: user?.avatar,
-        title: user?.nickname,
-        size: "small",
-        render: (_props, dom) => (
-          <UserAvatar
-            dom={dom}
-            onLogout={() => {
-              void handleLogout();
-            }}
-          />
-        ),
-      }}
-    >
-      <Outlet />
-    </ProLayout>
+    <>
+      <ProLayout
+        title="Admin Template"
+        layout="side"
+        fixSiderbar
+        location={location}
+        route={menuRoute}
+        logo={<UserOutlined />}
+        menu={{ defaultOpenAll: true, autoClose: false }}
+        menuItemRender={renderMenuItem}
+        onMenuHeaderClick={() => navigate("/dashboard")}
+        token={{
+          pageContainer: pageContainerToken,
+        }}
+        avatarProps={{
+          render: (_props, _dom, layoutProps) => (
+            <UserAccountBar
+              collapsed={Boolean(layoutProps?.collapsed)}
+              onOpenSettings={() => setSettingsOpen(true)}
+            />
+          ),
+        }}
+      >
+        <Outlet />
+      </ProLayout>
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+    </>
   );
 }

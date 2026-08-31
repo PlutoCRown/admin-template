@@ -1,27 +1,39 @@
-import hljs from "highlight.js/lib/core";
-import json from "highlight.js/lib/languages/json";
-import typescript from "highlight.js/lib/languages/typescript";
-import xml from "highlight.js/lib/languages/xml";
+import { createHighlighter, type BundledLanguage } from "shiki";
 
-hljs.registerLanguage("xml", xml);
-hljs.registerLanguage("json", json);
-hljs.registerLanguage("typescript", typescript);
-
-const LANGUAGE_MAP: Record<string, string> = {
+const LANGUAGE_MAP: Record<string, BundledLanguage> = {
   ts: "typescript",
-  tsx: "typescript",
+  tsx: "tsx",
   typescript: "typescript",
   json: "json",
 };
+
+let highlighterPromise: ReturnType<typeof createHighlighter> | null = null;
+
+function getHighlighter() {
+  highlighterPromise ??= createHighlighter({
+    themes: ["github-dark"],
+    langs: ["tsx", "typescript", "json"],
+  });
+  return highlighterPromise;
+}
 
 function escapeHtml(value: string) {
   return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
-export function highlightCode(value: string, language: string) {
+export function escapeCode(value: string) {
+  return escapeHtml(value);
+}
+
+export async function highlightCode(value: string, language: string) {
   const resolved = LANGUAGE_MAP[language];
   if (!resolved) {
     return escapeHtml(value);
   }
-  return hljs.highlight(value, { language: resolved }).value;
+  const highlighter = await getHighlighter();
+  return highlighter.codeToHtml(value, {
+    lang: resolved,
+    theme: "github-dark",
+    structure: "inline",
+  });
 }

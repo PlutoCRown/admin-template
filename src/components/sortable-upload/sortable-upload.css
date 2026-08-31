@@ -26,20 +26,21 @@
 .sortable-upload-item {
   border: 1px solid #f0f0f0;
   cursor: grab;
-  transition: box-shadow 0.2s ease;
-}
-
-.sortable-upload-card.is-dragging .sortable-upload-item {
-  box-shadow: none;
 }
 
 .sortable-upload-card.is-overlay {
   cursor: grabbing;
+  border-radius: 8px;
+  box-shadow: none;
+  transition: box-shadow 180ms ease;
+}
+
+.sortable-upload-card.is-overlay.is-lifted {
+  box-shadow: 0 12px 28px rgb(0 0 0 / 22%);
 }
 
 .sortable-upload-card.is-overlay .sortable-upload-item {
   cursor: grabbing;
-  box-shadow: 0 12px 28px rgb(0 0 0 / 22%);
 }
 
 .sortable-upload-item:active {

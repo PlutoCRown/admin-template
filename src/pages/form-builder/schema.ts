@@ -1,4 +1,18 @@
-export type FormBuilderFieldType = "text" | "textArea" | "digit" | "select" | "radio" | "checkbox";
+export type FormBuilderFieldType =
+  | "text"
+  | "textArea"
+  | "digit"
+  | "select"
+  | "radio"
+  | "checkbox"
+  | "time"
+  | "date"
+  | "dateTime"
+  | "cascader"
+  | "treeSelect"
+  | "switch"
+  | "segmented"
+  | "money";
 
 export type FormBuilderLayout = "horizontal" | "vertical";
 
@@ -29,8 +43,16 @@ interface FieldTypeDefinition {
     | "FormDigit"
     | "FormSelect"
     | "FormRadio"
-    | "FormCheckbox";
-  valueType: "string" | "number" | "array";
+    | "FormCheckbox"
+    | "FormTime"
+    | "FormDate"
+    | "FormDateTime"
+    | "FormCascader"
+    | "FormTreeSelect"
+    | "FormSwitch"
+    | "FormSegmented"
+    | "FormMoney";
+  valueType: "string" | "number" | "array" | "boolean";
   defaultWidth: number;
   defaultBlock: boolean;
 }
@@ -82,6 +104,70 @@ export const FIELD_TYPE_DEFINITIONS: FieldTypeDefinition[] = [
     componentName: "FormCheckbox",
     valueType: "array",
     defaultWidth: 20,
+    defaultBlock: false,
+  },
+  {
+    value: "time",
+    label: "时间",
+    componentName: "FormTime",
+    valueType: "string",
+    defaultWidth: 12,
+    defaultBlock: false,
+  },
+  {
+    value: "date",
+    label: "日期",
+    componentName: "FormDate",
+    valueType: "string",
+    defaultWidth: 12,
+    defaultBlock: false,
+  },
+  {
+    value: "dateTime",
+    label: "日期时间",
+    componentName: "FormDateTime",
+    valueType: "string",
+    defaultWidth: 20,
+    defaultBlock: false,
+  },
+  {
+    value: "cascader",
+    label: "级联选择",
+    componentName: "FormCascader",
+    valueType: "array",
+    defaultWidth: 14,
+    defaultBlock: false,
+  },
+  {
+    value: "treeSelect",
+    label: "树选择",
+    componentName: "FormTreeSelect",
+    valueType: "string",
+    defaultWidth: 14,
+    defaultBlock: false,
+  },
+  {
+    value: "switch",
+    label: "开关",
+    componentName: "FormSwitch",
+    valueType: "boolean",
+    defaultWidth: 8,
+    defaultBlock: false,
+  },
+  {
+    value: "segmented",
+    label: "分段选择",
+    componentName: "FormSegmented",
+    valueType: "string",
+    defaultWidth: 16,
+    defaultBlock: false,
+  },
+  {
+    value: "money",
+    label: "金额",
+    componentName: "FormMoney",
+    valueType: "number",
+    defaultWidth: 12,
     defaultBlock: false,
   },
 ];
@@ -164,6 +250,94 @@ const defaultFields: FormBuilderField[] = [
     placeholder: "请选择兴趣爱好",
     options: ["阅读", "旅行", "运动", "音乐"],
   },
+  {
+    id: "builder_start_time",
+    name: "startTime",
+    label: "开始时间",
+    type: "time",
+    width: 12,
+    required: false,
+    block: false,
+    placeholder: "请选择开始时间",
+    options: [],
+  },
+  {
+    id: "builder_join_date",
+    name: "joinDate",
+    label: "入职日期",
+    type: "date",
+    width: 12,
+    required: false,
+    block: false,
+    placeholder: "请选择入职日期",
+    options: [],
+  },
+  {
+    id: "builder_meeting_at",
+    name: "meetingAt",
+    label: "会议时间",
+    type: "dateTime",
+    width: 20,
+    required: false,
+    block: false,
+    placeholder: "请选择会议时间",
+    options: [],
+  },
+  {
+    id: "builder_region",
+    name: "region",
+    label: "所属地区",
+    type: "cascader",
+    width: 14,
+    required: false,
+    block: false,
+    placeholder: "请选择所属地区",
+    options: ["华东", "华南", "华北"],
+  },
+  {
+    id: "builder_org",
+    name: "org",
+    label: "组织架构",
+    type: "treeSelect",
+    width: 14,
+    required: false,
+    block: false,
+    placeholder: "请选择组织架构",
+    options: ["研发中心", "产品部", "设计部"],
+  },
+  {
+    id: "builder_enabled",
+    name: "enabled",
+    label: "是否启用",
+    type: "switch",
+    width: 8,
+    required: false,
+    block: false,
+    placeholder: "",
+    options: [],
+  },
+  {
+    id: "builder_status",
+    name: "taskStatus",
+    label: "任务状态",
+    type: "segmented",
+    width: 16,
+    required: false,
+    block: false,
+    placeholder: "",
+    options: ["待处理", "进行中", "已完成"],
+  },
+  {
+    id: "builder_budget",
+    name: "budget",
+    label: "预算金额",
+    type: "money",
+    width: 12,
+    required: false,
+    block: false,
+    placeholder: "请输入预算金额",
+    options: [],
+  },
 ];
 
 let fieldSequence = defaultFields.length;
@@ -172,8 +346,38 @@ function getTypeDefinition(type: FormBuilderFieldType) {
   return FIELD_TYPE_DEFINITIONS.find((definition) => definition.value === type)!;
 }
 
+const OPTION_FIELD_TYPES = new Set<FormBuilderFieldType>([
+  "select",
+  "radio",
+  "checkbox",
+  "cascader",
+  "treeSelect",
+  "segmented",
+]);
+
+const PLACEHOLDER_HIDDEN_TYPES = new Set<FormBuilderFieldType>([
+  "radio",
+  "checkbox",
+  "switch",
+  "segmented",
+]);
+
+const SELECT_LIKE_TYPES = new Set<FormBuilderFieldType>([
+  ...OPTION_FIELD_TYPES,
+  "time",
+  "date",
+  "dateTime",
+]);
+
 function hasOptions(type: FormBuilderFieldType) {
-  return type === "select" || type === "radio" || type === "checkbox";
+  return OPTION_FIELD_TYPES.has(type);
+}
+
+function getDefaultPlaceholder(type: FormBuilderFieldType) {
+  if (PLACEHOLDER_HIDDEN_TYPES.has(type)) {
+    return "";
+  }
+  return SELECT_LIKE_TYPES.has(type) ? "请选择" : "请输入";
 }
 
 function cloneField(field: FormBuilderField): FormBuilderField {
@@ -199,7 +403,7 @@ export function createFormBuilderField(type: FormBuilderFieldType = "text"): For
     width: definition.defaultWidth,
     required: false,
     block: definition.defaultBlock,
-    placeholder: hasOptions(type) ? "请选择" : "请输入",
+    placeholder: getDefaultPlaceholder(type),
     options: hasOptions(type) ? ["选项一", "选项二"] : [],
   };
 }
@@ -213,7 +417,7 @@ export function applyFieldTypeDefaults(
     type,
     width: definition.defaultWidth,
     block: definition.defaultBlock,
-    placeholder: hasOptions(type) ? "请选择" : "请输入",
+    placeholder: getDefaultPlaceholder(type),
     options: hasOptions(type) && field.options.length === 0 ? ["选项一", "选项二"] : field.options,
   };
 }
@@ -223,7 +427,7 @@ export function fieldTypeHasOptions(type: FormBuilderFieldType) {
 }
 
 export function fieldTypeHasPlaceholder(type: FormBuilderFieldType) {
-  return type !== "radio" && type !== "checkbox";
+  return !PLACEHOLDER_HIDDEN_TYPES.has(type);
 }
 
 function getSafeName(field: FormBuilderField, index: number) {
@@ -245,13 +449,21 @@ function getOptionUnion(field: FormBuilderField) {
 }
 
 function getFieldTypeScriptType(field: FormBuilderField) {
-  if (field.type === "digit") {
+  if (field.type === "digit" || field.type === "money") {
     return "number";
   }
-  if (field.type === "checkbox") {
+  if (field.type === "switch") {
+    return "boolean";
+  }
+  if (field.type === "checkbox" || field.type === "cascader") {
     return `Array<${getOptionUnion(field)}>`;
   }
-  if (field.type === "select" || field.type === "radio") {
+  if (
+    field.type === "select" ||
+    field.type === "radio" ||
+    field.type === "treeSelect" ||
+    field.type === "segmented"
+  ) {
     return getOptionUnion(field);
   }
   return "string";
@@ -344,7 +556,7 @@ export function generateFormSchema(fields: FormBuilderField[], settings: FormBui
 
 function getJsonSchemaProperty(field: FormBuilderField, index: number) {
   const base = { title: getSafeLabel(field, index) };
-  if (field.type === "checkbox") {
+  if (field.type === "checkbox" || field.type === "cascader") {
     return {
       ...base,
       type: "array",
@@ -353,6 +565,15 @@ function getJsonSchemaProperty(field: FormBuilderField, index: number) {
         ...(field.options.length > 0 ? { enum: field.options } : {}),
       },
     };
+  }
+  if (field.type === "date") {
+    return { ...base, type: "string", format: "date" };
+  }
+  if (field.type === "time") {
+    return { ...base, type: "string", format: "time" };
+  }
+  if (field.type === "dateTime") {
+    return { ...base, type: "string", format: "date-time" };
   }
   const definition = getTypeDefinition(field.type);
   return {
@@ -385,18 +606,47 @@ export function generateJsonSchema(fields: FormBuilderField[]) {
 }
 
 export function generateSamplePayload(fields: FormBuilderField[]) {
-  const payload: Record<string, string | number | string[]> = {};
+  const payload: Record<string, string | number | boolean | string[]> = {};
   fields.forEach((field, index) => {
     const name = getSafeName(field, index);
     if (field.type === "digit") {
       payload[name] = 18;
       return;
     }
+    if (field.type === "money") {
+      payload[name] = 1280;
+      return;
+    }
+    if (field.type === "switch") {
+      payload[name] = true;
+      return;
+    }
     if (field.type === "checkbox") {
       payload[name] = field.options.slice(0, 2);
       return;
     }
-    if (field.type === "select" || field.type === "radio") {
+    if (field.type === "cascader") {
+      payload[name] = field.options[0] ? [field.options[0]] : [];
+      return;
+    }
+    if (field.type === "date") {
+      payload[name] = "2026-08-31";
+      return;
+    }
+    if (field.type === "time") {
+      payload[name] = "11:00:00";
+      return;
+    }
+    if (field.type === "dateTime") {
+      payload[name] = "2026-08-31 11:00:00";
+      return;
+    }
+    if (
+      field.type === "select" ||
+      field.type === "radio" ||
+      field.type === "treeSelect" ||
+      field.type === "segmented"
+    ) {
       payload[name] = field.options[0] ?? "";
       return;
     }

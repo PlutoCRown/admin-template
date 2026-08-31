@@ -12,23 +12,20 @@ import {
   DragOverlay,
   PointerSensor,
   closestCenter,
+  defaultDropAnimationSideEffects,
   useSensor,
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
+  type DropAnimation,
 } from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  rectSortingStrategy,
-  useSortable,
-  type AnimateLayoutChanges,
-} from "@dnd-kit/sortable";
+import { SortableContext, arrayMove, rectSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { App, Image, Upload, type UploadProps } from "antd";
 import { getErrorMessage } from "#api/client";
 import { uploadFileApi } from "#api/products";
 import type { MediaFile } from "#api/types";
+import { DragOverlaySurface } from "#components/drag-overlay-surface";
 import "./sortable-upload.css";
 
 interface SortableUploadProps {
@@ -43,8 +40,22 @@ interface SortableFileCardProps {
   onRemove: (uid: string) => void;
 }
 
-const animateLayoutChanges: AnimateLayoutChanges = ({ isSorting, wasDragging }) =>
-  !(isSorting || wasDragging);
+const SORTABLE_TRANSITION = {
+  duration: 250,
+  easing: "cubic-bezier(0.25, 1, 0.5, 1)",
+};
+const dropAnimation: DropAnimation = {
+  duration: SORTABLE_TRANSITION.duration,
+  easing: SORTABLE_TRANSITION.easing,
+  sideEffects(params) {
+    params.dragOverlay.node.querySelector(".is-lifted")?.classList.remove("is-lifted");
+    return defaultDropAnimationSideEffects({
+      styles: {
+        active: { opacity: "0" },
+      },
+    })(params);
+  },
+};
 
 function handleRemovePointerDown(event: PointerEvent<HTMLButtonElement>) {
   event.stopPropagation();
@@ -62,7 +73,7 @@ function SortableFileCard({ file, onPreview, onRemove }: SortableFileCardProps) 
   const draggedRef = useRef(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: file.uid,
-    animateLayoutChanges,
+    transition: SORTABLE_TRANSITION,
   });
 
   useEffect(() => {
@@ -219,11 +230,11 @@ export function SortableUpload({ value = [], onChange, max = 8 }: SortableUpload
             ) : null}
           </div>
         </SortableContext>
-        <DragOverlay dropAnimation={null}>
+        <DragOverlay dropAnimation={dropAnimation}>
           {activeFile ? (
-            <div className="sortable-upload-card is-overlay">
+            <DragOverlaySurface className="sortable-upload-card is-overlay">
               <FileCardPreview file={activeFile} />
-            </div>
+            </DragOverlaySurface>
           ) : null}
         </DragOverlay>
       </DndContext>

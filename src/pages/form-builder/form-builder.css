@@ -62,14 +62,15 @@
   padding: 12px;
 }
 
-.form-builder-sortable-item {
+.form-builder-sortable-overlay {
+  cursor: grabbing;
+  border-radius: 8px;
+  box-shadow: none;
   transition: box-shadow 180ms ease;
 }
 
-.form-builder-sortable-overlay {
-  cursor: grabbing;
+.form-builder-sortable-overlay.is-lifted {
   box-shadow: 0 10px 28px rgb(0 0 0 / 16%);
-  border-radius: 8px;
 }
 
 .form-builder-sortable-overlay .form-builder-field-card.ant-pro-card {
@@ -109,7 +110,7 @@
 .form-builder-field-grid {
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(108px, 1fr) minmax(108px, 1fr) 116px 92px 64px 64px;
+  grid-template-columns: minmax(108px, 1fr) minmax(108px, 1fr) 140px 92px 64px 64px;
   gap: 12px;
   align-items: end;
 }
@@ -267,67 +268,13 @@
 
 .form-builder-code-block pre code {
   display: block;
-  background: transparent;
+  background: transparent !important;
   color: inherit;
   font: inherit;
 }
 
-.form-builder-code-block .hljs-comment,
-.form-builder-code-block .hljs-quote {
-  color: #8a8a8a;
-  font-style: italic;
-}
-
-.form-builder-code-block .hljs-keyword,
-.form-builder-code-block .hljs-selector-tag,
-.form-builder-code-block .hljs-literal,
-.form-builder-code-block .hljs-section,
-.form-builder-code-block .hljs-link {
-  color: #d4a574;
-}
-
-.form-builder-code-block .hljs-string,
-.form-builder-code-block .hljs-doctag,
-.form-builder-code-block .hljs-regexp {
-  color: #c9a227;
-}
-
-.form-builder-code-block .hljs-number,
-.form-builder-code-block .hljs-symbol {
-  color: #b5cea8;
-}
-
-.form-builder-code-block .hljs-built_in,
-.form-builder-code-block .hljs-type,
-.form-builder-code-block .hljs-class .hljs-title,
-.form-builder-code-block .hljs-title.class_ {
-  color: #7eb8a8;
-}
-
-.form-builder-code-block .hljs-title,
-.form-builder-code-block .hljs-title.function_,
-.form-builder-code-block .hljs-subst {
-  color: #e5e5e5;
-}
-
-.form-builder-code-block .hljs-attr,
-.form-builder-code-block .hljs-attribute,
-.form-builder-code-block .hljs-variable,
-.form-builder-code-block .hljs-template-variable,
-.form-builder-code-block .hljs-params {
-  color: #c5c5c5;
-}
-
-.form-builder-code-block .hljs-tag,
-.form-builder-code-block .hljs-name,
-.form-builder-code-block .hljs-selector-id,
-.form-builder-code-block .hljs-selector-class {
-  color: #d4d4d4;
-}
-
-.form-builder-code-block .hljs-meta,
-.form-builder-code-block .hljs-meta .hljs-keyword {
-  color: #a3a3a3;
+.form-builder-code-block pre code span {
+  font: inherit;
 }
 
 @media (width <= 1180px) {

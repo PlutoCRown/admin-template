@@ -102,10 +102,20 @@
     .ant-input,
     .ant-input-affix-wrapper,
     .ant-input-number,
+    .ant-input-number-group-wrapper,
     .ant-input-textarea,
-    .ant-select
+    .ant-select,
+    .ant-picker,
+    .ant-cascader,
+    .ant-segmented
   ) {
   width: 100% !important;
+  max-width: 100%;
+}
+
+.ch-form-item-inline
+  :where(.ant-picker, .ant-cascader, .ant-segmented, .ant-input-number-group-wrapper) {
+  width: 100%;
   max-width: 100%;
 }
 

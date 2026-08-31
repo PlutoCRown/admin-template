@@ -2,12 +2,20 @@ import { useState } from "react";
 import { ExportOutlined, ReloadOutlined } from "@ant-design/icons";
 import { Alert, Button, Card, Empty, InputNumber, Segmented, Space, Tag } from "antd";
 import {
+  FormCascader,
   FormCheckbox,
+  FormDate,
+  FormDateTime,
   FormDigit,
+  FormMoney,
   FormRadio,
+  FormSegmented,
   FormSelect,
+  FormSwitch,
   FormText,
   FormTextArea,
+  FormTime,
+  FormTreeSelect,
   ProForm,
 } from "#components/form";
 import { PageContainer } from "#components/page-container";
@@ -78,6 +86,48 @@ function renderPreviewField(field: FormBuilderField) {
     case "digit":
       return (
         <FormDigit key={field.id} {...commonProps} placeholder={field.placeholder || undefined} />
+      );
+    case "time":
+      return (
+        <FormTime key={field.id} {...commonProps} placeholder={field.placeholder || undefined} />
+      );
+    case "date":
+      return (
+        <FormDate key={field.id} {...commonProps} placeholder={field.placeholder || undefined} />
+      );
+    case "dateTime":
+      return (
+        <FormDateTime
+          key={field.id}
+          {...commonProps}
+          placeholder={field.placeholder || undefined}
+        />
+      );
+    case "cascader":
+      return (
+        <FormCascader
+          key={field.id}
+          {...commonProps}
+          placeholder={field.placeholder || undefined}
+          options={field.options}
+        />
+      );
+    case "treeSelect":
+      return (
+        <FormTreeSelect
+          key={field.id}
+          {...commonProps}
+          placeholder={field.placeholder || undefined}
+          options={field.options}
+        />
+      );
+    case "switch":
+      return <FormSwitch key={field.id} {...commonProps} />;
+    case "segmented":
+      return <FormSegmented key={field.id} {...commonProps} options={field.options} />;
+    case "money":
+      return (
+        <FormMoney key={field.id} {...commonProps} placeholder={field.placeholder || undefined} />
       );
     default:
       return (
@@ -196,7 +246,7 @@ export function FormBuilderPage() {
           <div className="form-builder-summary">
             <Space size={[4, 4]} wrap>
               <Tag color="blue">{fields.length} 个字段</Tag>
-              <Tag>支持文本、多行文本、数字、下拉、单选和多选</Tag>
+              <Tag>支持文本、数字、日期时间、级联、树选择、开关、分段和金额</Tag>
               <Tag>拖动卡片左上角手柄调整顺序</Tag>
             </Space>
           </div>

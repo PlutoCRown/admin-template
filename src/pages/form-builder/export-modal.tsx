@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ApiOutlined,
   CodeOutlined,
@@ -7,7 +7,7 @@ import {
   FileTextOutlined,
 } from "@ant-design/icons";
 import { App, Button, Modal, Tabs, type TabsProps } from "antd";
-import { highlightCode } from "./highlight";
+import { escapeCode, highlightCode } from "./highlight";
 import {
   generateFormCode,
   generateFormSchema,
@@ -33,7 +33,28 @@ interface CodeBlockProps {
 function CodeBlock({ value, language }: CodeBlockProps) {
   const { message } = App.useApp();
   const [copying, setCopying] = useState(false);
-  const highlighted = useMemo(() => highlightCode(value, language), [language, value]);
+  const [highlightState, setHighlightState] = useState<{
+    source: string;
+    language: string;
+    html: string;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void highlightCode(value, language).then((html) => {
+      if (!cancelled) {
+        setHighlightState({ source: value, language, html });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [language, value]);
+
+  const highlighted =
+    highlightState?.source === value && highlightState.language === language
+      ? highlightState.html
+      : escapeCode(value);
 
   const handleCopy = async () => {
     setCopying(true);
@@ -62,7 +83,7 @@ function CodeBlock({ value, language }: CodeBlockProps) {
       </div>
       <pre>
         <code
-          className={`hljs language-${language}`}
+          className={`language-${language}`}
           dangerouslySetInnerHTML={{ __html: highlighted }}
         />
       </pre>
