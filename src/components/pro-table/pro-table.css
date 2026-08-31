@@ -14,6 +14,37 @@
   white-space: nowrap;
 }
 
+.admin-pro-table .ant-table-tbody .ant-table-cell:has(.admin-pro-table-image) {
+  --ant-table-cell-padding-block: 0px;
+  --ant-table-cell-padding-inline: 0px;
+  --ant-table-cell-padding-block-md: 0px;
+  --ant-table-cell-padding-inline-md: 0px;
+  --ant-table-cell-padding-block-sm: 0px;
+  --ant-table-cell-padding-inline-sm: 0px;
+}
+
+.admin-pro-table-image {
+  display: block;
+  box-sizing: border-box;
+  line-height: 0;
+}
+
+.admin-pro-table-image .ant-image {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--admin-pro-table-image-radius, 0px);
+}
+
+.admin-pro-table-image .ant-image-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: var(--admin-pro-table-image-fit, cover);
+  object-position: var(--admin-pro-table-image-position, center);
+}
+
 .admin-pro-table .ant-table-cell-wrap {
   white-space: normal;
 }

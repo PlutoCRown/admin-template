@@ -1,0 +1,62 @@
+.article {
+  display: grid;
+  gap: 16px;
+  color: var(--ant-color-text, rgb(0 0 0 / 88%));
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.article :global(h1),
+.article :global(h2),
+.article :global(h3),
+.article :global(.ProseMirror h1),
+.article :global(.ProseMirror h2),
+.article :global(.ProseMirror h3) {
+  margin: 8px 0 0;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.article :global(h1),
+.article :global(.ProseMirror h1) {
+  font-size: 32px;
+}
+
+.article :global(h2),
+.article :global(.ProseMirror h2) {
+  font-size: 22px;
+}
+
+.article :global(h3),
+.article :global(.ProseMirror h3) {
+  font-size: 18px;
+}
+
+.article :global(p),
+.article :global(ul),
+.article :global(ol),
+.article :global(blockquote),
+.article :global(.ProseMirror p),
+.article :global(.ProseMirror ul),
+.article :global(.ProseMirror ol),
+.article :global(.ProseMirror blockquote) {
+  margin: 0;
+}
+
+.article :global(ul),
+.article :global(ol),
+.article :global(.ProseMirror ul),
+.article :global(.ProseMirror ol) {
+  padding-inline-start: 1.4em;
+}
+
+.article :global(blockquote),
+.article :global(.ProseMirror blockquote) {
+  padding-inline-start: 12px;
+  border-inline-start: 3px solid var(--ant-color-border, rgb(0 0 0 / 15%));
+  color: var(--ant-color-text-secondary, rgb(0 0 0 / 65%));
+}
+
+.article :global(a) {
+  color: var(--ant-color-primary, #1677ff);
+}

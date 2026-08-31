@@ -1,3 +1,4 @@
+import type { BlogPost, BlogPostPayload } from "#api/blog/types";
 import type { LoginPayload } from "#api/login/types";
 import type { ProductPayload } from "#api/media/types";
 import type { Staff, StaffPayload } from "#api/pro/types";
@@ -7,6 +8,7 @@ import {
   fileToMedia,
   getStaffAvatar,
   passwords,
+  posts,
   products,
   staff,
   users,
@@ -23,9 +25,22 @@ import {
 let staffRows: Staff[] = staff.map((item) => ({ ...item }));
 let articleRows = articles.map((item) => ({ ...item }));
 let productRows = products.map((item) => ({ ...item }));
+let postRows: BlogPost[] = posts.map((item) => ({ ...item }));
 let staffSeq = staffRows.length;
 let productSeq = 0;
 let fileSeq = 0;
+let postSeq = postRows.length;
+
+function postSummary(title: string, content: string, summary?: string) {
+  if (summary?.trim()) {
+    return summary.trim();
+  }
+  const line = content.split("\n").find((item) => {
+    const text = item.trim();
+    return text && !text.startsWith("#") && !text.startsWith("<");
+  });
+  return (line ?? title).trim().slice(0, 80);
+}
 
 function queryValue(params: object | undefined, key: string): string {
   if (!params) {
@@ -123,6 +138,15 @@ async function handle(config: ResolvedHttpRequestConfig): Promise<unknown> {
     return true;
   }
 
+  const publicPost = match(pathname, "/api/posts/:id");
+  if (publicPost && method === "GET") {
+    const item = postRows.find((entry) => entry.id === publicPost.id);
+    if (!item) {
+      throw new ApiError(ErrorCode.NOT_FOUND, "内容不存在");
+    }
+    return item;
+  }
+
   const user = requireUser(authorization);
 
   if (method === "GET" && match(pathname, "/api/auth/profile")) {
@@ -187,6 +211,63 @@ async function handle(config: ResolvedHttpRequestConfig): Promise<unknown> {
       throw new ApiError(ErrorCode.NOT_FOUND, "员工不存在");
     }
     staffRows = staffRows.filter((_, entryIndex) => entryIndex !== index);
+    return true;
+  }
+
+  if (method === "GET" && match(pathname, "/api/posts")) {
+    const keyword = queryValue(config.params, "keyword").trim();
+    const status = queryValue(config.params, "status");
+    const filtered = postRows.filter((item) => {
+      const keywordHit = !keyword || item.title.includes(keyword) || item.summary.includes(keyword);
+      return keywordHit && (!status || item.status === status);
+    });
+    return paginate(
+      filtered,
+      queryNumber(config.params, "page", 1),
+      queryNumber(config.params, "pageSize", 10),
+    );
+  }
+
+  if (method === "POST" && match(pathname, "/api/posts")) {
+    postSeq += 1;
+    const payload = config.data as BlogPostPayload;
+    const item: BlogPost = {
+      id: `post_${postSeq}`,
+      title: payload.title,
+      summary: postSummary(payload.title, payload.content, payload.summary),
+      content: payload.content,
+      status: payload.status,
+      updatedAt: new Date().toISOString(),
+    };
+    postRows = [item, ...postRows];
+    return item;
+  }
+
+  const postOne = match(pathname, "/api/posts/:id");
+  if (postOne && method === "PUT") {
+    const index = postRows.findIndex((entry) => entry.id === postOne.id);
+    const current = postRows[index];
+    if (index < 0 || !current) {
+      throw new ApiError(ErrorCode.NOT_FOUND, "内容不存在");
+    }
+    const payload = config.data as BlogPostPayload;
+    const next: BlogPost = {
+      ...current,
+      title: payload.title,
+      content: payload.content,
+      status: payload.status,
+      summary: postSummary(payload.title, payload.content, payload.summary),
+      updatedAt: new Date().toISOString(),
+    };
+    postRows = postRows.map((entry, entryIndex) => (entryIndex === index ? next : entry));
+    return next;
+  }
+  if (postOne && method === "DELETE") {
+    const index = postRows.findIndex((entry) => entry.id === postOne.id);
+    if (index < 0) {
+      throw new ApiError(ErrorCode.NOT_FOUND, "内容不存在");
+    }
+    postRows = postRows.filter((_, entryIndex) => entryIndex !== index);
     return true;
   }
 

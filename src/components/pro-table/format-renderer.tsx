@@ -9,12 +9,17 @@ import {
   formatWesternNumber,
 } from "#utils/format";
 import { FormatCell } from "./format-cell";
+import { ImageCell, type ProColumnImageOptions } from "./image-cell";
+
+export type { ProColumnImageOptions };
 
 export type ProColumnRenderer =
   | "dateTime"
   | "largeNumber"
+  | "image"
   | { type: "dateTime" }
-  | { type: "largeNumber"; digits?: number };
+  | { type: "largeNumber"; digits?: number }
+  | ({ type: "image" } & ProColumnImageOptions);
 
 export interface ProTableFormats {
   largeNumber: LargeNumberFormat;
@@ -50,6 +55,16 @@ export function renderFormattedValue(
   formats: ProTableFormats,
 ): ReactNode {
   const type = getRendererType(renderer);
+  if (type === "image") {
+    if (typeof value !== "string" || !value) {
+      return "-";
+    }
+    if (typeof renderer === "object" && renderer.type === "image") {
+      const { type: _imageType, ...imageProps } = renderer;
+      return <ImageCell src={value} {...imageProps} />;
+    }
+    return <ImageCell src={value} />;
+  }
   if (type === "dateTime") {
     if (formats.dateTime === "none") {
       return renderRawValue(value);

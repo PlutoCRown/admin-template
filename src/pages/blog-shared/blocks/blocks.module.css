@@ -1,0 +1,204 @@
+.hashTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.hashTagHot {
+  color: #fff;
+  background: linear-gradient(135deg, #ff4d4f, #fa541c);
+}
+
+.hashTagNew {
+  color: #fff;
+  background: linear-gradient(135deg, #1677ff, #722ed1);
+}
+
+.hashTagLimited {
+  color: #fff;
+  background: linear-gradient(135deg, #fa8c16, #d4b106);
+}
+
+.promo {
+  display: grid;
+  gap: 12px;
+  padding: 28px 24px;
+  border-radius: 20px;
+  color: #fff;
+}
+
+.promoSunset {
+  background: linear-gradient(135deg, #fa541c, #eb2f96);
+}
+
+.promoOcean {
+  background: linear-gradient(135deg, #1677ff, #13c2c2);
+}
+
+.promoForest {
+  background: linear-gradient(135deg, #389e0d, #13c2c2);
+}
+
+.promoTitle {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.25;
+}
+
+.promoSubtitle {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  opacity: 0.92;
+}
+
+.promoCta {
+  justify-self: start;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 92%);
+  color: #141414;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.countdown {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--ant-color-fill-quaternary, rgb(0 0 0 / 4%));
+}
+
+.countdownTitle {
+  margin: 0;
+  color: var(--ant-color-text-secondary, rgb(0 0 0 / 65%));
+  font-size: 13px;
+}
+
+.countdownRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.countdownUnit {
+  display: grid;
+  min-width: 64px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  background: var(--ant-color-bg-container, #fff);
+  text-align: center;
+}
+
+.countdownValue {
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.countdownLabel {
+  color: var(--ant-color-text-secondary, rgb(0 0 0 / 45%));
+  font-size: 12px;
+}
+
+.priceCard {
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid var(--ant-color-border-secondary, rgb(0 0 0 / 6%));
+  border-radius: 16px;
+  background: var(--ant-color-bg-container, #fff);
+}
+
+.priceHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.priceName {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.priceBadge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fff1f0;
+  color: #cf1322;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.priceRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.priceCurrent {
+  color: #cf1322;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.priceOriginal {
+  color: var(--ant-color-text-quaternary, rgb(0 0 0 / 25%));
+  font-size: 14px;
+  text-decoration: line-through;
+}
+
+.cta {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  padding: 24px 16px;
+  border-radius: 16px;
+}
+
+.ctaPrimary {
+  background: var(--ant-color-primary-bg, #e6f4ff);
+}
+
+.ctaDark {
+  background: #141414;
+  color: #fff;
+}
+
+.ctaButton {
+  padding: 10px 22px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ctaPrimary .ctaButton {
+  background: var(--ant-color-primary, #1677ff);
+  color: #fff;
+}
+
+.ctaDark .ctaButton {
+  background: #fff;
+  color: #141414;
+}
+
+.ctaHint {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.7;
+}

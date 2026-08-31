@@ -13,7 +13,7 @@ import "./pro-table.css";
 export type { ActionType } from "@ant-design/pro-components";
 export { TagSelect } from "./tag-select";
 export type { TagSelectValue, TagSelectValueConfig, TagSelectValueEnum } from "./tag-select";
-export type { ProColumnRenderer } from "./format-renderer";
+export type { ProColumnRenderer, ProColumnImageOptions } from "./format-renderer";
 export type { ProColumnSearch, ProTableSearch } from "./search-form";
 
 export type ProTableAction<T> = ActionType & {
@@ -179,6 +179,9 @@ export function ProTable<
       const rendererType = getRendererType(renderer);
       if (rendererType === "largeNumber") {
         columnProps.align = columnProps.align ?? "right";
+      }
+      if (rendererType === "image") {
+        columnProps.align = columnProps.align ?? "center";
       }
       columnProps.render = (_dom, record) =>
         renderFormattedValue(getRecordValue(record, column.dataIndex), renderer, {

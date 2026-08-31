@@ -1,0 +1,106 @@
+.editorShell {
+  display: grid;
+  gap: 8px;
+}
+
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 8px 0;
+  background: var(--ant-color-bg-container, #fff);
+}
+
+.surface {
+  padding: 8px 4px 24px;
+}
+
+.prose {
+  outline: none;
+  min-height: 420px;
+}
+
+.surface :global(.ProseMirror-focused) {
+  outline: none;
+}
+
+.surface :global(.ProseMirror p.is-editor-empty:first-child::before) {
+  color: var(--ant-color-text-quaternary, rgb(0 0 0 / 25%));
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.editorLoading {
+  min-height: 240px;
+  display: grid;
+  place-items: center;
+  color: var(--ant-color-text-secondary, rgb(0 0 0 / 45%));
+}
+
+.blockWrap {
+  margin: 4px 0;
+}
+
+.block {
+  cursor: pointer;
+  border-radius: 16px;
+  outline: 2px solid transparent;
+  outline-offset: 4px;
+}
+
+.blockSelected {
+  outline-color: var(--ant-color-primary, #1677ff);
+}
+
+.popover {
+  width: min(420px, calc(100vw - 48px));
+}
+
+.popoverHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.popoverHint {
+  margin-top: 4px;
+  color: var(--ant-color-text-secondary, rgb(0 0 0 / 45%));
+  font-size: 12px;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.titleField {
+  flex: 1;
+  min-width: 240px;
+}
+
+.previewFrame {
+  height: calc(100vh - 160px);
+  min-height: 0;
+}
+
+.iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
+}
+
+.source {
+  margin: 0;
+  height: 100%;
+  padding: 16px 20px;
+  overflow: auto;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}

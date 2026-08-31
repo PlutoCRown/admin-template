@@ -1,0 +1,35 @@
+.page {
+  min-height: 100%;
+  background: var(--ant-color-bg-layout, #f5f5f5);
+}
+
+.shell {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+
+.previewFlag {
+  margin-bottom: 16px;
+}
+
+.kicker {
+  margin: 0 0 8px;
+  color: var(--ant-color-text-secondary, rgb(0 0 0 / 45%));
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title:global(.ant-typography) {
+  margin: 0 0 24px;
+  font-size: 36px;
+  line-height: 1.2;
+}
+
+.loading,
+.empty {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+}

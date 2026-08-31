@@ -5,7 +5,6 @@ import { ProTable, type ProColumns, type ProTableAction } from "#components/pro-
 import { CreateStaffButton } from "./create-staff-button";
 import { NameEditor } from "./name-editor";
 import { departmentOptions, roleEnum, statusEnum } from "./staff-options";
-import { StaffImage } from "./staff-image";
 import { StaffRowActions } from "./staff-row-actions";
 import { StatusRenderer } from "./status-renderer";
 
@@ -43,14 +42,13 @@ export function ProTablePage() {
       fixed: "left",
       search: false,
       width: 80,
-      render: (_, record) => <StaffImage alt={record.name} src={record.avatar} />,
+      renderer: { type: "image", padding: 8, radius: 8 },
     },
     {
       title: "姓名",
       dataIndex: "name",
       fixed: "left",
       width: 100,
-      search: { width: 4 },
       render: (_, record) => <NameEditor record={record} actionRef={actionRef} />,
     },
     { title: "邮箱", dataIndex: "email", copyable: true, search: { width: 18 } },

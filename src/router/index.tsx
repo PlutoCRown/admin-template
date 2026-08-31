@@ -17,6 +17,13 @@ const LoginPage = lazy(() =>
 const MediaFormPage = lazy(() =>
   import("#pages/media").then((module) => ({ default: module.MediaFormPage })),
 );
+const BlogManagePage = lazy(() =>
+  import("#pages/blog-manage").then((module) => ({ default: module.BlogManagePage })),
+);
+const BlogEditorPage = lazy(() =>
+  import("#pages/blog-editor").then((module) => ({ default: module.BlogEditorPage })),
+);
+const BlogPage = lazy(() => import("#pages/blog").then((module) => ({ default: module.BlogPage })));
 const NotFoundPage = lazy(() =>
   import("#pages/not-found").then((module) => ({ default: module.NotFoundPage })),
 );
@@ -47,6 +54,10 @@ export const router = createBrowserRouter(
       element: withRouteLoading(<LoginPage />, true),
     },
     {
+      path: "/blog/:id",
+      element: withRouteLoading(<BlogPage />, true),
+    },
+    {
       element: <AuthGuard />,
       children: [
         {
@@ -65,6 +76,8 @@ export const router = createBrowserRouter(
               element: withRouteLoading(<ProDescriptionsPage />),
             },
             { path: "media", element: withRouteLoading(<MediaFormPage />) },
+            { path: "blog-manage", element: withRouteLoading(<BlogManagePage />) },
+            { path: "blog-editor/:id", element: withRouteLoading(<BlogEditorPage />) },
             { path: "*", element: withRouteLoading(<NotFoundPage />) },
           ],
         },

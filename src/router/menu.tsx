@@ -3,6 +3,7 @@ import {
   AppstoreOutlined,
   BuildOutlined,
   DashboardOutlined,
+  EditOutlined,
   FormOutlined,
   PictureOutlined,
   ProfileOutlined,
@@ -54,6 +55,11 @@ export const menuRoute: AppMenuRoute = {
       path: "/media",
       name: "媒体图册",
       icon: <PictureOutlined />,
+    },
+    {
+      path: "/blog-manage",
+      name: "MDX 活动页",
+      icon: <EditOutlined />,
     },
   ],
 };
