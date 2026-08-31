@@ -1,5 +1,13 @@
+import { lazy, Suspense } from "react";
+import { Spin } from "antd";
 import { useFormBuilderStore } from "#stores/form-builder";
-import { ExportModal } from "./export-modal";
+
+async function loadExportModal() {
+  const module = await import("./export-modal");
+  return { default: module.ExportModal };
+}
+
+const ExportModal = lazy(loadExportModal);
 
 export function ExportModalHost() {
   const exportOpen = useFormBuilderStore((state) => state.exportOpen);
@@ -15,5 +23,9 @@ export function ExportModalHost() {
     return null;
   }
 
-  return <ExportModal open fields={fields} settings={settings} onClose={handleClose} />;
+  return (
+    <Suspense fallback={<Spin fullscreen />}>
+      <ExportModal open fields={fields} settings={settings} onClose={handleClose} />
+    </Suspense>
+  );
 }

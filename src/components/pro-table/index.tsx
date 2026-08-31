@@ -281,6 +281,7 @@ export function ProTable<
 
   return (
     <AntProTable<DataSource, Params, ValueType>
+      scroll={{ x: "100%", y: "100%" }}
       {...rest}
       actionRef={innerRef}
       bordered={bordered}
