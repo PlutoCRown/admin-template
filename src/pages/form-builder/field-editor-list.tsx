@@ -6,7 +6,12 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { DeleteOutlined, HolderOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  CloseOutlined,
+  HolderOutlined,
+  MinusCircleOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import {
   DndContext,
   DragOverlay,
@@ -24,9 +29,10 @@ import {
   arrayMove,
   useSortable,
   verticalListSortingStrategy,
+  type AnimateLayoutChanges,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ProCard, ProList } from "@ant-design/pro-components";
+import { ProCard } from "@ant-design/pro-components";
 import { Button, Input, InputNumber, Popconfirm, Select, Switch } from "antd";
 import { DragOverlaySurface } from "#components/drag-overlay-surface";
 import {
@@ -35,6 +41,7 @@ import {
   createFormBuilderField,
   fieldTypeHasOptions,
   fieldTypeHasPlaceholder,
+  fieldTypeHasWidth,
   type FormBuilderField,
   type FormBuilderFieldType,
 } from "./schema";
@@ -60,71 +67,16 @@ interface OptionEditorListProps {
   onChange: (options: string[]) => void;
 }
 
-interface OptionRow {
-  id: string;
-  value: string;
-  index: number;
-}
-
 interface SortableListItemProps {
   id: string;
   children: ReactNode;
 }
 
-function OptionEditorList({ options, onChange }: OptionEditorListProps) {
-  const dataSource: OptionRow[] = options.map((value, index) => ({
-    id: `option-${index}`,
-    value,
-    index,
-  }));
-
-  const handleValueChange = (index: number, value: string) => {
-    onChange(options.map((item, itemIndex) => (itemIndex === index ? value : item)));
-  };
-  const handleRemove = (index: number) => {
-    onChange(options.filter((_, itemIndex) => itemIndex !== index));
-  };
-  const handleAdd = () => {
-    onChange([...options, `选项${options.length + 1}`]);
-  };
-  const renderToolbar = () => [
-    <Button key="add" size="small" type="dashed" icon={<PlusOutlined />} onClick={handleAdd}>
-      新增选项
-    </Button>,
-  ];
-  const renderItem = (item: OptionRow) => (
-    <div className="form-builder-option-item">
-      <Input
-        value={item.value}
-        onChange={(event) => handleValueChange(item.index, event.target.value)}
-        placeholder="选项文案"
-      />
-      <Button
-        type="text"
-        danger
-        icon={<DeleteOutlined />}
-        aria-label={`删除选项 ${item.value || item.index + 1}`}
-        onClick={() => handleRemove(item.index)}
-      />
-    </div>
-  );
-
-  return (
-    <ProList<OptionRow>
-      rowKey="id"
-      headerTitle="选项"
-      search={false}
-      options={false}
-      pagination={false}
-      split={false}
-      dataSource={dataSource}
-      columns={[{ key: "editor", listSlot: "content" }]}
-      itemRender={renderItem}
-      toolBarRender={renderToolbar}
-      cardProps={{ ghost: true }}
-      className="form-builder-option-list"
-    />
-  );
+interface SortableOptionItemProps {
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+  onRemove: () => void;
 }
 
 const DragHandleContext = createContext<ReactNode>(null);
@@ -132,6 +84,9 @@ const SORTABLE_TRANSITION = {
   duration: 250,
   easing: "cubic-bezier(0.25, 1, 0.5, 1)",
 };
+/** DragOverlay 归位时不要再播一遍布局补间，否则会闪一下交换 */
+const animateLayoutChanges: AnimateLayoutChanges = ({ isSorting, wasDragging }) =>
+  !(isSorting || wasDragging);
 const dropAnimation: DropAnimation = {
   duration: SORTABLE_TRANSITION.duration,
   easing: SORTABLE_TRANSITION.easing,
@@ -144,6 +99,207 @@ const dropAnimation: DropAnimation = {
     })(params);
   },
 };
+
+let optionIdSequence = 0;
+function createOptionId() {
+  optionIdSequence += 1;
+  return `form_builder_option_${Date.now()}_${optionIdSequence}`;
+}
+
+function reconcileOptionIds(prev: string[], length: number) {
+  if (prev.length === length) {
+    return prev;
+  }
+  if (length > prev.length) {
+    return [...prev, ...Array.from({ length: length - prev.length }, () => createOptionId())];
+  }
+  return prev.slice(0, length);
+}
+
+function OptionRowView({
+  value,
+  dragHandle,
+  onChange,
+  onRemove,
+}: {
+  value: string;
+  dragHandle: ReactNode;
+  onChange: (value: string) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="form-builder-option-item">
+      {dragHandle}
+      <Input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="选项文案"
+      />
+      <Button
+        type="text"
+        icon={<MinusCircleOutlined />}
+        aria-label={`删除选项 ${value || ""}`}
+        onClick={onRemove}
+      />
+    </div>
+  );
+}
+
+function SortableOptionItem({ id, value, onChange, onRemove }: SortableOptionItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id,
+    transition: SORTABLE_TRANSITION,
+    animateLayoutChanges,
+  });
+  const style: CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition: isDragging ? undefined : transition,
+    opacity: isDragging ? 0 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="form-builder-sortable-option">
+      <OptionRowView
+        value={value}
+        onChange={onChange}
+        onRemove={onRemove}
+        dragHandle={
+          <button
+            type="button"
+            ref={setActivatorNodeRef}
+            className="form-builder-drag-handle form-builder-option-drag-handle"
+            aria-label="拖动调整选项顺序"
+            {...attributes}
+            {...listeners}
+          >
+            <HolderOutlined />
+          </button>
+        }
+      />
+    </div>
+  );
+}
+
+function OptionEditorList({ options, onChange }: OptionEditorListProps) {
+  const [ids, setIds] = useState<string[]>(() => options.map(() => createOptionId()));
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [overlayWidth, setOverlayWidth] = useState<number>();
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 6 },
+    }),
+  );
+  const syncedIds = reconcileOptionIds(ids, options.length);
+  if (syncedIds !== ids) {
+    setIds(syncedIds);
+  }
+  const activeIndex = activeId ? syncedIds.indexOf(activeId) : -1;
+  const activeValue = activeIndex >= 0 ? options[activeIndex] : undefined;
+
+  const handleValueChange = (index: number, value: string) => {
+    onChange(options.map((item, itemIndex) => (itemIndex === index ? value : item)));
+  };
+  const handleRemove = (index: number) => {
+    onChange(options.filter((_, itemIndex) => itemIndex !== index));
+    setIds((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
+  };
+  const handleAdd = () => {
+    onChange([...options, `选项${options.length + 1}`]);
+    setIds((prev) => [...prev, createOptionId()]);
+  };
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    setActiveId(String(active.id));
+    setOverlayWidth(active.rect.current.initial?.width);
+  };
+  const handleDragCancel = () => {
+    setActiveId(null);
+    setOverlayWidth(undefined);
+  };
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    setActiveId(null);
+    setOverlayWidth(undefined);
+    if (!over || active.id === over.id) {
+      return;
+    }
+    const fromIndex = syncedIds.indexOf(String(active.id));
+    const toIndex = syncedIds.indexOf(String(over.id));
+    if (fromIndex < 0 || toIndex < 0) {
+      return;
+    }
+    onChange(arrayMove(options, fromIndex, toIndex));
+    setIds((prev) => arrayMove(reconcileOptionIds(prev, options.length), fromIndex, toIndex));
+  };
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
+    >
+      <div className="form-builder-option-list">
+        <div className="form-builder-option-list-header">
+          <div className="form-builder-option-list-title">选项</div>
+          <Button size="small" type="dashed" icon={<PlusOutlined />} onClick={handleAdd}>
+            新增选项
+          </Button>
+        </div>
+        <SortableContext items={syncedIds} strategy={verticalListSortingStrategy}>
+          <div className="form-builder-option-list-body">
+            {options.map((value, index) => {
+              const id = syncedIds[index];
+              if (!id) {
+                return null;
+              }
+              return (
+                <SortableOptionItem
+                  key={id}
+                  id={id}
+                  value={value}
+                  onChange={(next) => handleValueChange(index, next)}
+                  onRemove={() => handleRemove(index)}
+                />
+              );
+            })}
+          </div>
+        </SortableContext>
+      </div>
+      <DragOverlay dropAnimation={dropAnimation}>
+        {activeValue != null && activeId ? (
+          <DragOverlaySurface
+            className="form-builder-sortable-option form-builder-option-overlay"
+            style={{ width: overlayWidth }}
+          >
+            <OptionRowView
+              value={activeValue}
+              onChange={() => undefined}
+              onRemove={() => undefined}
+              dragHandle={
+                <button
+                  type="button"
+                  className="form-builder-drag-handle form-builder-option-drag-handle"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                >
+                  <HolderOutlined />
+                </button>
+              }
+            />
+          </DragOverlaySurface>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
+  );
+}
 
 function OverlayDragHandle() {
   return (
@@ -166,7 +322,11 @@ function SortableListItem({ id, children }: SortableListItemProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id, transition: SORTABLE_TRANSITION });
+  } = useSortable({
+    id,
+    transition: SORTABLE_TRANSITION,
+    animateLayoutChanges,
+  });
   const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition: isDragging ? undefined : transition,
@@ -263,16 +423,18 @@ function FieldEditorItem({ field, onUpdate, onRemove }: FieldEditorItemProps) {
             optionFilterProp="label"
           />
         </label>
-        <label className="form-builder-field-control form-builder-field-width-control">
-          <span>表单项宽度</span>
-          <InputNumber
-            min={1}
-            max={48}
-            value={field.width}
-            onChange={handleWidthChange}
-            disabled={field.block}
-          />
-        </label>
+        {fieldTypeHasWidth(field.type) ? (
+          <label className="form-builder-field-control form-builder-field-width-control">
+            <span>表单项宽度</span>
+            <InputNumber
+              min={1}
+              max={48}
+              value={field.width}
+              onChange={handleWidthChange}
+              disabled={field.block}
+            />
+          </label>
+        ) : null}
         {fieldTypeHasPlaceholder(field.type) ? (
           <label className="form-builder-field-control form-builder-field-placeholder-control">
             <span>占位提示</span>
@@ -305,20 +467,8 @@ function RemoveAction({ field, onRemove }: RemoveActionProps) {
   };
   return (
     <Popconfirm title="删除这个表单项？" onConfirm={handleRemove}>
-      <Button type="text" danger icon={<DeleteOutlined />} aria-label={`删除 ${field.label}`} />
+      <Button danger type="text" icon={<CloseOutlined />} aria-label={`删除 ${field.label}`} />
     </Popconfirm>
-  );
-}
-
-function renderSortableItem(
-  field: FormBuilderField,
-  onUpdate: FieldEditorItemProps["onUpdate"],
-  onRemove: FieldEditorItemProps["onRemove"],
-) {
-  return (
-    <SortableListItem id={field.id}>
-      <FieldEditorItem field={field} onUpdate={onUpdate} onRemove={onRemove} />
-    </SortableListItem>
   );
 }
 
@@ -362,13 +512,6 @@ export function FieldEditorList({ fields, onChange }: FieldEditorListProps) {
       onChange(arrayMove(fields, fromIndex, toIndex));
     }
   };
-  const renderToolbar = () => [
-    <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-      新增字段
-    </Button>,
-  ];
-  const renderItem = (field: FormBuilderField) =>
-    renderSortableItem(field, handleUpdate, handleRemove);
 
   return (
     <DndContext
@@ -379,19 +522,21 @@ export function FieldEditorList({ fields, onChange }: FieldEditorListProps) {
       onDragCancel={handleDragCancel}
     >
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-        <ProList<FormBuilderField>
-          rowKey="id"
-          headerTitle="字段列表"
-          search={false}
-          options={false}
-          pagination={false}
-          split={false}
-          dataSource={fields}
-          columns={[{ key: "editor", listSlot: "content" }]}
-          itemRender={renderItem}
-          toolBarRender={renderToolbar}
-          className="form-builder-field-list"
-        />
+        <div className="form-builder-field-list">
+          <div className="form-builder-field-list-header">
+            <div className="form-builder-field-list-title">字段列表</div>
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+              新增字段
+            </Button>
+          </div>
+          <div className="form-builder-field-list-body">
+            {fields.map((field) => (
+              <SortableListItem key={field.id} id={field.id}>
+                <FieldEditorItem field={field} onUpdate={handleUpdate} onRemove={handleRemove} />
+              </SortableListItem>
+            ))}
+          </div>
+        </div>
       </SortableContext>
       <DragOverlay dropAnimation={dropAnimation}>
         {activeField ? (

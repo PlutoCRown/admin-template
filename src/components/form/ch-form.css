@@ -69,10 +69,22 @@
   max-width: var(--ch-input-width);
 }
 
+.ch-form-item-inline.ch-form-item-auto .ant-form-item-control {
+  flex: 0 1 auto !important;
+  width: max-content;
+  max-width: 100%;
+}
+
 .ch-form-item-inline .ant-form-item-control-input,
 .ch-form-item-inline .ant-form-item-control-input-content {
   min-width: 0;
   width: 100%;
+  max-width: 100%;
+}
+
+.ch-form-item-inline.ch-form-item-auto .ant-form-item-control-input,
+.ch-form-item-inline.ch-form-item-auto .ant-form-item-control-input-content {
+  width: max-content;
   max-width: 100%;
 }
 
@@ -106,17 +118,26 @@
     .ant-input-textarea,
     .ant-select,
     .ant-picker,
-    .ant-cascader,
-    .ant-segmented
+    .ant-cascader
   ) {
   width: 100% !important;
   max-width: 100%;
 }
 
-.ch-form-item-inline
-  :where(.ant-picker, .ant-cascader, .ant-segmented, .ant-input-number-group-wrapper) {
+.ch-form-item-inline:not(.ch-form-item-auto)
+  :where(.ant-picker, .ant-cascader, .ant-input-number-group-wrapper) {
   width: 100%;
   max-width: 100%;
+}
+
+/* switch / segmented：只跟随内容宽度，即使表单项占整行也不拉长 */
+.ch-form-item :where(.ant-switch, .ant-segmented) {
+  width: auto !important;
+  max-width: 100%;
+}
+
+.ch-form-item :where(.ant-segmented .ant-segmented-group) {
+  width: auto !important;
 }
 
 .ch-form-item :where(.ant-radio-group, .ant-checkbox-group) {
@@ -152,6 +173,7 @@
 
 .ch-form-vertical .ch-form-item-block .ant-form-item-row {
   width: 100%;
+  height: auto;
 }
 
 .ch-form-vertical .ch-form-item-inline .ant-form-item-control {
@@ -160,8 +182,18 @@
   max-width: 100%;
 }
 
+/* 垂直布局主轴是高度：不能再用 flex 1 1 0，否则 control 会被压成约 1px 导致表单项重叠 */
 .ch-form-vertical .ch-form-item-block .ant-form-item-control {
+  flex: none !important;
   width: 100% !important;
+  min-width: 0 !important;
+  min-height: auto !important;
+  max-width: none;
+}
+
+.ch-form-vertical .ch-form-item-block .ant-form-item-control-input,
+.ch-form-vertical .ch-form-item-block .ant-form-item-control-input-content {
+  height: auto;
 }
 
 .ch-form .ant-pro-form-submitter {

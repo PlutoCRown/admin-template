@@ -27,7 +27,8 @@ export interface FormBuilderField {
   name: string;
   label: string;
   type: FormBuilderFieldType;
-  width: number;
+  /** 不支持宽度的类型（radio/checkbox/switch/segmented）保持 undefined */
+  width?: number;
   required: boolean;
   block: boolean;
   placeholder: string;
@@ -233,7 +234,6 @@ const defaultFields: FormBuilderField[] = [
     name: "gender",
     label: "性别",
     type: "radio",
-    width: 16,
     required: false,
     block: false,
     placeholder: "请选择性别",
@@ -244,7 +244,6 @@ const defaultFields: FormBuilderField[] = [
     name: "interests",
     label: "兴趣爱好",
     type: "checkbox",
-    width: 20,
     required: false,
     block: false,
     placeholder: "请选择兴趣爱好",
@@ -310,7 +309,6 @@ const defaultFields: FormBuilderField[] = [
     name: "enabled",
     label: "是否启用",
     type: "switch",
-    width: 8,
     required: false,
     block: false,
     placeholder: "",
@@ -321,7 +319,6 @@ const defaultFields: FormBuilderField[] = [
     name: "taskStatus",
     label: "任务状态",
     type: "segmented",
-    width: 16,
     required: false,
     block: false,
     placeholder: "",
@@ -362,6 +359,13 @@ const PLACEHOLDER_HIDDEN_TYPES = new Set<FormBuilderFieldType>([
   "segmented",
 ]);
 
+const WIDTH_HIDDEN_TYPES = new Set<FormBuilderFieldType>([
+  "radio",
+  "checkbox",
+  "switch",
+  "segmented",
+]);
+
 const SELECT_LIKE_TYPES = new Set<FormBuilderFieldType>([
   ...OPTION_FIELD_TYPES,
   "time",
@@ -392,6 +396,13 @@ export function getDefaultFormBuilderFields() {
   return defaultFields.map(cloneField);
 }
 
+function getDefaultWidth(type: FormBuilderFieldType): number | undefined {
+  if (WIDTH_HIDDEN_TYPES.has(type)) {
+    return undefined;
+  }
+  return getTypeDefinition(type).defaultWidth;
+}
+
 export function createFormBuilderField(type: FormBuilderFieldType = "text"): FormBuilderField {
   fieldSequence += 1;
   const definition = getTypeDefinition(type);
@@ -400,7 +411,7 @@ export function createFormBuilderField(type: FormBuilderFieldType = "text"): For
     name: `field${fieldSequence}`,
     label: `字段 ${fieldSequence}`,
     type,
-    width: definition.defaultWidth,
+    width: getDefaultWidth(type),
     required: false,
     block: definition.defaultBlock,
     placeholder: getDefaultPlaceholder(type),
@@ -415,7 +426,7 @@ export function applyFieldTypeDefaults(
   const definition = getTypeDefinition(type);
   return {
     type,
-    width: definition.defaultWidth,
+    width: getDefaultWidth(type),
     block: definition.defaultBlock,
     placeholder: getDefaultPlaceholder(type),
     options: hasOptions(type) && field.options.length === 0 ? ["选项一", "选项二"] : field.options,
@@ -428,6 +439,10 @@ export function fieldTypeHasOptions(type: FormBuilderFieldType) {
 
 export function fieldTypeHasPlaceholder(type: FormBuilderFieldType) {
   return !PLACEHOLDER_HIDDEN_TYPES.has(type);
+}
+
+export function fieldTypeHasWidth(type: FormBuilderFieldType) {
+  return !WIDTH_HIDDEN_TYPES.has(type);
 }
 
 function getSafeName(field: FormBuilderField, index: number) {
@@ -475,7 +490,7 @@ function renderFieldCode(field: FormBuilderField, index: number) {
     `name=${JSON.stringify(getSafeName(field, index))}`,
     `label=${JSON.stringify(getSafeLabel(field, index))}`,
   ];
-  if (!field.block) {
+  if (!field.block && field.width != null) {
     props.push(`width={${field.width}}`);
   }
   if (field.required) {
@@ -547,7 +562,10 @@ export function generateFormSchema(fields: FormBuilderField[], settings: FormBui
   return JSON.stringify(
     {
       settings,
-      fields: fields.map(({ id: _id, ...field }) => field),
+      fields: fields.map(({ id: _id, width, ...field }) => ({
+        ...field,
+        ...(fieldTypeHasWidth(field.type) && width != null ? { width } : {}),
+      })),
     },
     null,
     2,

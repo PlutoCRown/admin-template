@@ -67,8 +67,9 @@ function withOptionsField<P extends WidthProp & FormItemBag>(
   Field: ComponentType<P>,
   optionsKey: "options" | "treeData" = "options",
   defaultBlock = false,
+  fillWidth = true,
 ) {
-  const ChField = withChField(Field, defaultBlock);
+  const ChField = withChField(Field, defaultBlock, fillWidth);
   function OptionsField(props: ChFieldProps<P> & { options?: unknown[] }) {
     const { options, fieldProps, ...rest } = props;
     return (
@@ -97,5 +98,5 @@ export const FormDateTime = withChField(AntProFormDateTimePicker);
 export const FormCascader = withOptionsField(AntProFormCascader);
 export const FormTreeSelect = withOptionsField(AntProFormTreeSelect, "treeData");
 export const FormSwitch = withChField(AntProFormSwitch, false, false);
-export const FormSegmented = withOptionsField(AntProFormSegmented);
+export const FormSegmented = withOptionsField(AntProFormSegmented, "options", false, false);
 export const FormMoney = withChField(AntProFormMoney);

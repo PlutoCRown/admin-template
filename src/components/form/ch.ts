@@ -1,11 +1,11 @@
 import type { FormItemProps } from "antd";
 
 export interface ChWidthProps {
-  /** 控件宽度，单位为方块字符（1em）。传入后为非 block，按字符宽渲染 */
+  /** 控件宽度，单位为方块字符（1em）。不传则按内容宽度 */
   width?: number;
   /** label 宽度，单位为方块字符（1em）。不传或 0 时按文字自动撑开 */
   labelWidth?: number;
-  /** 强制占满一行，忽略 width 的 inline 行为 */
+  /** 表单项独占一行；控件本身是否拉满取决于类型（输入类拉满，switch/segmented 仍按内容） */
   block?: boolean;
 }
 
@@ -24,16 +24,19 @@ export function chFormItemProps(
   options: ChWidthProps,
   formItemProps?: FormItemProps,
 ): FormItemProps {
-  const isBlock = options.block || options.width == null;
+  const isBlock = Boolean(options.block);
+  const hasWidth = options.width != null;
   const chStyle = {
     "--ch-label-width": chLabelWidth(options.labelWidth),
-    "--ch-input-width": chVar(options.width, "100%"),
+    // 未指定 width 时按内容宽度，避免 switch/segmented 等被拉满
+    "--ch-input-width": hasWidth ? chVar(options.width, "100%") : "max-content",
   } as unknown as NonNullable<FormItemProps["style"]>;
   return {
     ...formItemProps,
     className: [
       "ch-form-item",
       isBlock ? "ch-form-item-block" : "ch-form-item-inline",
+      !isBlock && !hasWidth ? "ch-form-item-auto" : "",
       formItemProps?.className,
     ]
       .filter(Boolean)
