@@ -23,7 +23,7 @@ export function LoginPage() {
       });
       setAuth(result.token, result.user);
       message.success(`欢迎回来，${result.user.nickname}`);
-      void navigate("/dashboard", { replace: true });
+      void navigate("/introduction", { replace: true });
       return true;
     } catch {
       return false;
@@ -39,7 +39,7 @@ export function LoginPage() {
   }
 
   if (token) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/introduction" replace />;
   }
 
   return (

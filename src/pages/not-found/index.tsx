@@ -9,8 +9,8 @@ export function NotFoundPage() {
       title="404"
       subTitle="页面不存在"
       extra={
-        <Button type="primary" onClick={() => navigate("/dashboard")}>
-          回到工作台
+        <Button type="primary" onClick={() => navigate("/introduction")}>
+          回到首页
         </Button>
       }
     />

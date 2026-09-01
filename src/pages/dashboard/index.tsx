@@ -1,5 +1,12 @@
-import { ProCard } from "@ant-design/pro-components";
-import { Descriptions, Space, Tag, Typography } from "antd";
+import {
+  ProCard,
+  ProForm,
+  ProFormSelect,
+  ProFormText,
+  ProFormTextArea,
+  ProFormTimePicker,
+} from "@ant-design/pro-components";
+import { Descriptions, Form, Input, Select, Space, Tag, TimePicker, Typography } from "antd";
 import { PageContainer } from "#components/page-container";
 import { useUserStore } from "#stores/user";
 import styles from "./dashboard.module.css";
@@ -44,6 +51,19 @@ export function DashboardPage() {
             ProTable、ProForm、ProList、SchemaForm、ProDescriptions，以及带拖拽排序的上传表单。
           </Typography.Paragraph>
         </ProCard>
+        <ProForm submitter={false}>
+          <ProFormText name="name" label="姓名" />
+          <ProFormSelect
+            name="role"
+            label="角色"
+            options={[
+              { label: "管理员", value: "admin" },
+              { label: "用户", value: "user" },
+            ]}
+          />
+          <ProFormTextArea name="description" label="描述" />
+          <ProFormTimePicker name="time" label="时间" />
+        </ProForm>
       </Space>
     </PageContainer>
   );

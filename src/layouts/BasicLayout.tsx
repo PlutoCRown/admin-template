@@ -38,7 +38,7 @@ export function BasicLayout() {
         logo={<UserOutlined />}
         menu={{ defaultOpenAll: true, autoClose: false }}
         menuItemRender={renderMenuItem}
-        onMenuHeaderClick={() => navigate("/dashboard")}
+        onMenuHeaderClick={() => navigate("/introduction")}
         token={{
           pageContainer: pageContainerToken,
         }}

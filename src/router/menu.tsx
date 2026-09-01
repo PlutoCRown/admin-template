@@ -7,6 +7,7 @@ import {
   FormOutlined,
   PictureOutlined,
   ProfileOutlined,
+  ReadOutlined,
   TableOutlined,
   UnorderedListOutlined,
 } from "@ant-design/icons";
@@ -29,6 +30,11 @@ export interface MenuPreferences {
 export const menuRoute: AppMenuRoute = {
   path: "/",
   routes: [
+    {
+      path: "/introduction",
+      name: "项目介绍",
+      icon: <ReadOutlined />,
+    },
     {
       path: "/dashboard",
       name: "工作台",
@@ -88,10 +94,25 @@ export function reconcileMenuOrder(order: MenuOrder, route: AppMenuRoute = menuR
       const savedPaths = (order[parentPath] ?? []).filter(
         (path, index, paths) => validPaths.has(path) && paths.indexOf(path) === index,
       );
-      return [
-        parentPath,
-        [...savedPaths, ...defaultPaths.filter((path) => !savedPaths.includes(path))],
-      ];
+      const reconciledPaths = [...savedPaths];
+
+      for (const path of defaultPaths) {
+        if (reconciledPaths.includes(path)) {
+          continue;
+        }
+        const defaultIndex = defaultPaths.indexOf(path);
+        const nextSavedPath = defaultPaths
+          .slice(defaultIndex + 1)
+          .find((candidate) => reconciledPaths.includes(candidate));
+        const insertIndex = nextSavedPath ? reconciledPaths.indexOf(nextSavedPath) : -1;
+        if (insertIndex >= 0) {
+          reconciledPaths.splice(insertIndex, 0, path);
+        } else {
+          reconciledPaths.push(path);
+        }
+      }
+
+      return [parentPath, reconciledPaths];
     }),
   );
 }

@@ -118,6 +118,7 @@ admin-template/
 
 | 路径                | 说明                   |
 | ------------------- | ---------------------- |
+| `/introduction`     | 项目介绍与组件对比     |
 | `/dashboard`        | 工作台                 |
 | `/form-builder`     | 表单生成器             |
 | `/pro/table`        | ProTable               |

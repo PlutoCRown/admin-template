@@ -8,6 +8,9 @@ import { RouteLoading } from "./RouteLoading";
 const DashboardPage = lazy(() =>
   import("#pages/dashboard").then((module) => ({ default: module.DashboardPage })),
 );
+const IntroductionPage = lazy(() =>
+  import("#pages/introduction").then((module) => ({ default: module.IntroductionPage })),
+);
 const FormBuilderPage = lazy(() =>
   import("#pages/form-builder").then((module) => ({ default: module.FormBuilderPage })),
 );
@@ -67,7 +70,8 @@ export const router = createBrowserRouter(
           path: "/",
           element: <BasicLayout />,
           children: [
-            { index: true, element: <Navigate to="/dashboard" replace /> },
+            { index: true, element: <Navigate to="/introduction" replace /> },
+            { path: "introduction", element: withRouteLoading(<IntroductionPage />) },
             { path: "dashboard", element: withRouteLoading(<DashboardPage />) },
             { path: "form-builder", element: withRouteLoading(<FormBuilderPage />) },
             { path: "pro/table", element: withRouteLoading(<ProTablePage />) },
