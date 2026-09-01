@@ -1,4 +1,5 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
+import { Outlet, useLocation } from "react-router";
 import { getBlogPostListApi, type BlogPost } from "#api/blog/posts";
 import { PageContainer } from "#components/page-container";
 import { ProTable, type ProColumns, type ProTableAction } from "#components/pro-table";
@@ -26,6 +27,16 @@ async function requestPostList(params: {
 
 export function BlogManagePage() {
   const actionRef = useRef<ProTableAction<BlogPost>>(null);
+  const location = useLocation();
+  const editing = location.pathname.startsWith("/blog-manage/edit/");
+  const wasEditing = useRef(editing);
+
+  useEffect(() => {
+    if (wasEditing.current && !editing) {
+      void actionRef.current?.reload();
+    }
+    wasEditing.current = editing;
+  }, [editing]);
 
   const columns: ProColumns<BlogPost>[] = [
     { title: "标题", dataIndex: "title", width: 280 },
@@ -59,6 +70,7 @@ export function BlogManagePage() {
         toolBarRender={() => [<CreatePostButton key="create" actionRef={actionRef} />]}
         request={requestPostList}
       />
+      <Outlet />
     </PageContainer>
   );
 }

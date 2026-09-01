@@ -18,6 +18,6 @@ export interface BlogPostQuery extends PageQuery {
 export interface BlogPostPayload {
   title: string;
   summary?: string;
-  content: string;
+  content?: string;
   status: BlogPostStatus;
 }

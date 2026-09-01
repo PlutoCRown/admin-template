@@ -32,7 +32,7 @@ export function PostRowActions({ record, actionRef }: PostRowActionsProps) {
 
   return (
     <Space>
-      <Link to={`/blog-editor/${record.id}`}>编辑</Link>
+      <Link to={`/blog-manage/edit/${record.id}`}>编辑</Link>
       <a href={withBasePath(`/blog/${record.id}`)} target="_blank" rel="noreferrer">
         前台
       </a>

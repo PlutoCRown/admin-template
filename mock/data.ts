@@ -3,7 +3,7 @@ import type { BlogPost } from "../src/api/blog/types";
 import type { UserProfile } from "../src/api/login/types";
 import type { MediaFile, Product } from "../src/api/media/types";
 import type { Article, Staff } from "../src/api/pro/types";
-import { SAMPLE_CAMPAIGN_MDX, SAMPLE_COUPON_MDX } from "../src/pages/blog-shared/sample-content";
+import { SAMPLE_CAMPAIGN_MDX, SAMPLE_COUPON_MDX } from "./sample-content";
 
 export const DEMO_ACCOUNTS = [
   { username: "admin", password: "admin123", label: "管理员" },
@@ -166,16 +166,16 @@ export const products: Product[] = [];
 export const posts: BlogPost[] = [
   {
     id: "post_1",
-    title: "夏日焕新季",
-    summary: "会员日限定，精选单品直降。正文是普通 Markdown，营销块序列化成标签。",
+    title: "GitNexus",
+    summary: "测试测试测试测试测试测试 Markdown，营销块序列化成标签。",
     content: SAMPLE_CAMPAIGN_MDX,
     status: "published",
     updatedAt: dayjs().subtract(1, "hour").toISOString(),
   },
   {
     id: "post_2",
-    title: "开学季补给站",
-    summary: "文具和数码配件组合购，适合一次备齐。",
+    title: "测试",
+    summary: "测试测试测试测试测试测试测试测试测试",
     content: SAMPLE_COUPON_MDX,
     status: "draft",
     updatedAt: dayjs().subtract(1, "day").toISOString(),

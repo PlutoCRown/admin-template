@@ -23,6 +23,9 @@ const BlogManagePage = lazy(() =>
 const BlogEditorPage = lazy(() =>
   import("#pages/blog-editor").then((module) => ({ default: module.BlogEditorPage })),
 );
+const BlogEditorRedirect = lazy(() =>
+  import("#pages/blog-editor").then((module) => ({ default: module.BlogEditorRedirect })),
+);
 const BlogPage = lazy(() => import("#pages/blog").then((module) => ({ default: module.BlogPage })));
 const NotFoundPage = lazy(() =>
   import("#pages/not-found").then((module) => ({ default: module.NotFoundPage })),
@@ -76,8 +79,12 @@ export const router = createBrowserRouter(
               element: withRouteLoading(<ProDescriptionsPage />),
             },
             { path: "media", element: withRouteLoading(<MediaFormPage />) },
-            { path: "blog-manage", element: withRouteLoading(<BlogManagePage />) },
-            { path: "blog-editor/:id", element: withRouteLoading(<BlogEditorPage />) },
+            {
+              path: "blog-manage",
+              element: withRouteLoading(<BlogManagePage />),
+              children: [{ path: "edit/:id", element: withRouteLoading(<BlogEditorPage />) }],
+            },
+            { path: "blog-editor/:id", element: withRouteLoading(<BlogEditorRedirect />) },
             { path: "*", element: withRouteLoading(<NotFoundPage />) },
           ],
         },

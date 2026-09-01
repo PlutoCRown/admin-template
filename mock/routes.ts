@@ -14,6 +14,7 @@ import {
   staff,
   users,
 } from "./data";
+import { resolvePostContent } from "./sample-content";
 import { ok, paginate } from "./envelope";
 
 let staffSeq = staff.length;
@@ -133,11 +134,12 @@ const privateRoutes = new Elysia()
     ({ body }) => {
       postSeq += 1;
       const payload = body as BlogPostPayload;
+      const content = resolvePostContent(payload.content);
       const item = {
         id: `post_${postSeq}`,
         title: payload.title,
-        summary: postSummary(payload.title, payload.content, payload.summary),
-        content: payload.content,
+        summary: postSummary(payload.title, content, payload.summary),
+        content,
         status: payload.status,
         updatedAt: new Date().toISOString(),
       };
@@ -147,7 +149,7 @@ const privateRoutes = new Elysia()
     {
       body: t.Object({
         title: t.String(),
-        content: t.String(),
+        content: t.Optional(t.String()),
         status: t.Union([t.Literal("draft"), t.Literal("published")]),
         summary: t.Optional(t.String()),
       }),
@@ -162,12 +164,13 @@ const privateRoutes = new Elysia()
         throw new ApiError(ErrorCode.NOT_FOUND, "内容不存在");
       }
       const payload = body as BlogPostPayload;
+      const content = payload.content ?? current.content;
       const next = {
         ...current,
         title: payload.title,
-        content: payload.content,
+        content,
         status: payload.status,
-        summary: postSummary(payload.title, payload.content, payload.summary),
+        summary: postSummary(payload.title, content, payload.summary),
         updatedAt: new Date().toISOString(),
       };
       posts[index] = next;

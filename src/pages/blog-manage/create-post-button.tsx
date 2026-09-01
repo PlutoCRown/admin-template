@@ -7,7 +7,6 @@ import { createBlogPostApi, type BlogPost, type BlogPostPayload } from "#api/blo
 import { FormSelect, FormText } from "#components/form";
 import { type ProTableAction } from "#components/pro-table";
 import { writeBlogPostCache } from "#pages/blog-shared/post-loader";
-import { SAMPLE_CAMPAIGN_MDX } from "#pages/blog-shared/sample-content";
 
 interface CreatePostButtonProps {
   actionRef: RefObject<ProTableAction<BlogPost> | null>;
@@ -21,13 +20,12 @@ export function CreatePostButton({ actionRef }: CreatePostButtonProps) {
     const created = await createBlogPostApi({
       title: values.title,
       status: values.status,
-      content: SAMPLE_CAMPAIGN_MDX,
       summary: "新建活动页",
     });
     writeBlogPostCache(created);
     message.success("已创建，进入编辑");
     void actionRef.current?.reload();
-    void navigate(`/blog-editor/${created.id}`);
+    void navigate(`/blog-manage/edit/${created.id}`);
     return true;
   };
 

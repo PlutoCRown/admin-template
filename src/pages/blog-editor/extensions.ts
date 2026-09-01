@@ -3,6 +3,7 @@ import { Node, ReactNodeViewRenderer, mergeAttributes } from "@tiptap/react";
 import { BLOCK_DEFS } from "#pages/blog-shared/registry";
 import { MdxBlockView } from "./mdx-block-view";
 import { proseExtensions } from "./prose-extensions";
+import { SlashCommand } from "./slash-command";
 
 function createMdxBlockExtension(nodeName: string, tagName: string) {
   return Node.create({
@@ -34,7 +35,8 @@ function createMdxBlockExtension(nodeName: string, tagName: string) {
 export const editorExtensions = [
   ...proseExtensions,
   Placeholder.configure({
-    placeholder: "输入正文，或从工具栏插入营销块",
+    placeholder: "输入 / 插入标题、列表或营销块",
   }),
+  SlashCommand,
   ...BLOCK_DEFS.map((item) => createMdxBlockExtension(item.nodeName, item.name)),
 ];

@@ -2,6 +2,7 @@ import type { Editor } from "@tiptap/react";
 import { PlusOutlined } from "@ant-design/icons";
 import { Button, Dropdown } from "antd";
 import { BLOCK_DEFS } from "#pages/blog-shared/registry";
+import { insertMdxBlock } from "./insert-mdx-block";
 
 interface InsertBlockButtonProps {
   editor: Editor;
@@ -21,11 +22,13 @@ export function InsertBlockButton({ editor }: InsertBlockButtonProps) {
           if (!def) {
             return;
           }
-          editor.chain().focus().insertContent({ type: def.nodeName, attrs: def.defaults }).run();
+          insertMdxBlock(editor, def);
         },
       }}
     >
-      <Button icon={<PlusOutlined />}>插入营销块</Button>
+      <Button size="small" icon={<PlusOutlined />}>
+        插入营销块
+      </Button>
     </Dropdown>
   );
 }

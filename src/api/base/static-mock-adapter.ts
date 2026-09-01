@@ -13,6 +13,7 @@ import {
   staff,
   users,
 } from "../../../mock/data";
+import { resolvePostContent } from "../../../mock/sample-content";
 import { issueToken, requireUser, revokeToken } from "../../../mock/auth";
 import { fail, ok, paginate } from "../../../mock/envelope";
 import {
@@ -231,11 +232,12 @@ async function handle(config: ResolvedHttpRequestConfig): Promise<unknown> {
   if (method === "POST" && match(pathname, "/api/posts")) {
     postSeq += 1;
     const payload = config.data as BlogPostPayload;
+    const content = resolvePostContent(payload.content);
     const item: BlogPost = {
       id: `post_${postSeq}`,
       title: payload.title,
-      summary: postSummary(payload.title, payload.content, payload.summary),
-      content: payload.content,
+      summary: postSummary(payload.title, content, payload.summary),
+      content,
       status: payload.status,
       updatedAt: new Date().toISOString(),
     };
@@ -251,12 +253,13 @@ async function handle(config: ResolvedHttpRequestConfig): Promise<unknown> {
       throw new ApiError(ErrorCode.NOT_FOUND, "内容不存在");
     }
     const payload = config.data as BlogPostPayload;
+    const content = payload.content ?? current.content;
     const next: BlogPost = {
       ...current,
       title: payload.title,
-      content: payload.content,
+      content,
       status: payload.status,
-      summary: postSummary(payload.title, payload.content, payload.summary),
+      summary: postSummary(payload.title, content, payload.summary),
       updatedAt: new Date().toISOString(),
     };
     postRows = postRows.map((entry, entryIndex) => (entryIndex === index ? next : entry));
